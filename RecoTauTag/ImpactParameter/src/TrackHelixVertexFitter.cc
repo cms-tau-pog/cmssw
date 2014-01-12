@@ -38,10 +38,11 @@ TrackHelixVertexFitter::TrackHelixVertexFitter(std::vector<TrackParticle> &parti
   cov_inv.ResizeTo(nVal,nVal);
   cov_inv=Inverter.Invert();
   ndf=nVal-nPar;
+  //std::cout << "TrackHelixVertexFitter::TrackHelixVertexFitter: " << nPar << " " << nVal <<  std::endl;
   // Set Initial conditions within reason
-  par(x0,0)  = vguess.X(); parcov(x0,x0)=pow(1.0,2.0);
-  par(y0,0)  = vguess.Y(); parcov(y0,y0)=pow(1.0,2.0);
-  par(z0,0)  = vguess.Z(); parcov(z0,z0)=pow(1.0,2.0);
+  par(x0,0)  = vguess.X(); parcov(x0,x0)=pow(25.0,2.0);
+  par(y0,0)  = vguess.Y(); parcov(y0,y0)=pow(25.0,2.0);
+  par(z0,0)  = vguess.Z(); parcov(z0,z0)=pow(25.0,2.0);
   for(unsigned int p=0; p<particles.size();p++){
     par(FreeParIndex(kappa0,p),0)  = val(MeasuredValueIndex(TrackParticle::kappa,p),0);
     par(FreeParIndex(lambda0,p),0) = val(MeasuredValueIndex(TrackParticle::lambda,p),0);
