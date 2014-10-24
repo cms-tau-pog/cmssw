@@ -16,7 +16,6 @@
 #include "RecoTauTag/RecoTau/interface/RecoTauVertexAssociator.h"
 #include "RecoTauTag/RecoTau/interface/ConeTools.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
-#include "DataFormats/PatCandidates/interface/Tau.h"
 
 #include "TMath.h"
 #include "TFormula.h"
@@ -24,12 +23,12 @@
 using namespace reco;
 using namespace std;
 
-template<typename Ttau, typename TcandColl, typename TcandPtr>
-class RecoTauDiscriminationByIsolationT : public PFTauDiscriminationProducerBase
+template<typename Ttau, typename TcandColl, typename TcandPtr, typename Tdiscr>
+class RecoTauDiscriminationByIsolationT : public Tdiscr
 {
  public:
   explicit RecoTauDiscriminationByIsolationT(const edm::ParameterSet& pset)
-    : PFTauDiscriminationProducerBase(pset),
+    : Tdiscr(pset),
       moduleLabel_(pset.getParameter<std::string>("@module_label")),
       qualityCutsPSet_(pset.getParameter<edm::ParameterSet>("qualityCuts"))
   {
@@ -212,8 +211,8 @@ class RecoTauDiscriminationByIsolationT : public PFTauDiscriminationProducerBase
   int verbosity_;
 };
 
-template<typename Ttau, typename TcandColl, typename TcandPtr>
-void RecoTauDiscriminationByIsolationT<Ttau, TcandColl, TcandPtr>::beginEvent(const edm::Event& event, const edm::EventSetup& eventSetup)
+template<typename Ttau, typename TcandColl, typename TcandPtr, typename Tdiscr>
+void RecoTauDiscriminationByIsolationT<Ttau, TcandColl, TcandPtr, Tdiscr>::beginEvent(const edm::Event& event, const edm::EventSetup& eventSetup)
 {
   // NB: The use of the PV in this context is necessitated by its use in
   // applying quality cuts to the different objects in the isolation cone
@@ -252,9 +251,9 @@ void RecoTauDiscriminationByIsolationT<Ttau, TcandColl, TcandPtr>::beginEvent(co
   }
 }
 
-template<typename Ttau, typename TcandColl, typename TcandPtr>
+template<typename Ttau, typename TcandColl, typename TcandPtr, typename Tdiscr>
 double
-RecoTauDiscriminationByIsolationT<Ttau, TcandColl, TcandPtr>::discriminate(const Ttau& pfTau)
+RecoTauDiscriminationByIsolationT<Ttau, TcandColl, TcandPtr, Tdiscr>::discriminate(const Ttau& pfTau)
 {
   if ( verbosity_ ) {
     std::cout << "<PFRecoTauDiscriminationByIsolation::discriminate (moduleLabel = " << moduleLabel_ <<")>:" << std::endl;

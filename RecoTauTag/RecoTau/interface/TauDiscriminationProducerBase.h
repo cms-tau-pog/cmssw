@@ -44,6 +44,9 @@
 #include "DataFormats/TauReco/interface/CaloTau.h"
 #include "DataFormats/TauReco/interface/CaloTauDiscriminator.h"
 
+#include "DataFormats/PatCandidates/interface/Tau.h"
+#include "DataFormats/PatCandidates/interface/PATTauDiscriminator.h"
+
 template<class TauType, class TauDiscriminator>
 class TauDiscriminationProducerBase : public edm::EDProducer {
   public:
@@ -105,6 +108,8 @@ typedef TauDiscriminationProducerBase<reco::PFTau, reco::PFTauDiscriminator>
   PFTauDiscriminationProducerBase;
 typedef TauDiscriminationProducerBase<reco::CaloTau, reco::CaloTauDiscriminator>
   CaloTauDiscriminationProducerBase;
+typedef TauDiscriminationProducerBase<pat::Tau, pat::PATTauDiscriminator>
+  PATTauDiscriminationProducerBase;
 
 /// helper function retrieve the correct cfi getter string (ie PFTauProducer)
 //for this tau type
