@@ -118,6 +118,6 @@ template<class TauType> std::string getProducerString()
   // this generic one shoudl never be called.
   // these are specialized in TauDiscriminationProducerBase.cc
   throw cms::Exception("TauDiscriminationProducerBase")
-      << "Unsupported TauType used.  You must use either PFTau or CaloTaus.";
+      << "Unsupported TauType used.  You must use either PFTau, PATTau or CaloTaus.";
 }
 #endif

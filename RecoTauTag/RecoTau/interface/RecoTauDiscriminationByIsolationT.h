@@ -89,7 +89,7 @@ class RecoTauDiscriminationByIsolationT : public Tdiscr
     qcuts_.reset(new tau::RecoTauQualityCuts(isolationQCuts));
 
     vertexAssociator_.reset(
-			    new tau::RecoTauVertexAssociator(qualityCutsPSet_,consumesCollector()));
+			    new tau::RecoTauVertexAssociator(qualityCutsPSet_,edm::EDProducer::consumesCollector()));
 
     applyDeltaBeta_ = pset.exists("applyDeltaBetaCorrection") ?
       pset.getParameter<bool>("applyDeltaBetaCorrection") : false;
@@ -120,9 +120,9 @@ class RecoTauDiscriminationByIsolationT : public Tdiscr
         puFactorizedIsoQCuts.second));
 
       pfCandSrc_ = pset.getParameter<edm::InputTag>("particleFlowSrc");
-      pfCand_token=consumes<TcandColl>(pfCandSrc_);
+      pfCand_token=edm::EDProducer::consumes<TcandColl>(pfCandSrc_);
       vertexSrc_ = pset.getParameter<edm::InputTag>("vertexSrc");
-      vertex_token=consumes<reco::VertexCollection>(vertexSrc_);
+      vertex_token=edm::EDProducer::consumes<reco::VertexCollection>(vertexSrc_);
       deltaBetaCollectionCone_ = pset.getParameter<double>(
         "isoConeSizeForDeltaBeta");
       std::string deltaBetaFactorFormula =
@@ -135,7 +135,7 @@ class RecoTauDiscriminationByIsolationT : public Tdiscr
       pset.getParameter<bool>("applyRhoCorrection") : false;
     if ( applyRhoCorrection_ ) {
       rhoProducer_ = pset.getParameter<edm::InputTag>("rhoProducer");
-      rho_token=consumes<double>(rhoProducer_);
+      rho_token=edm::EDProducer::consumes<double>(rhoProducer_);
       rhoConeSize_ = pset.getParameter<double>("rhoConeSize");
       rhoUEOffsetCorrection_ =
 	pset.getParameter<double>("rhoUEOffsetCorrection");
