@@ -10,7 +10,6 @@
 #include "DataFormats/PatCandidates/interface/PFParticle.h"
 #include "RecoTauTag/RecoTau/interface/RecoTauDiscriminationByIsolationT.h"
 
-//typedef RecoTauDiscriminationByIsolationT<pat::TauRef, pat::PackedCandidateCollection, edm::Ptr<pat::PackedCandidate>, PATTauDiscriminationProducerBase> PATTauDiscriminationByIsolation;
-typedef RecoTauDiscriminationByIsolationT<pat::TauRef, pat::TauCollection, edm::Ptr<pat::PFParticle>, PATTauDiscriminationProducerBase> PATTauDiscriminationByIsolation;
+typedef RecoTauDiscriminationByIsolationT<pat::TauRef, pat::PackedCandidateCollection, edm::Ptr<pat::PackedCandidate>, PATTauDiscriminationProducerBase> PATTauDiscriminationByIsolation;
 
 DEFINE_FWK_MODULE(PATTauDiscriminationByIsolation);

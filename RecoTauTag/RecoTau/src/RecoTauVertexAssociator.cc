@@ -164,6 +164,12 @@ RecoTauVertexAssociator::associatedVertex(const PFTau& tau) const {
 }
 
 reco::VertexRef
+RecoTauVertexAssociator::associatedVertex(const pat::Tau& tau) const {
+	reco::PFJetRef jetRef = tau.pfJetRef();
+	return associatedVertex(*jetRef);
+}
+
+reco::VertexRef
 RecoTauVertexAssociator::associatedVertex(const PFJet& jet) const {
   reco::VertexRef output = vertices_.size() ? vertices_[0] : reco::VertexRef();
   PFJet const* my_jet_ptr = &jet;

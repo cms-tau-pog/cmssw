@@ -303,14 +303,14 @@ RecoTauDiscriminationByIsolationT<Ttau, TcandColl, TcandPtr, Tdiscr>::discrimina
 
   // Load the tracks if they are being used.
   if ( includeTracks_ ) {
-    BOOST_FOREACH( const TcandPtr& cand, pfTau->isolationPFChargedHadrCands() ) {
+    BOOST_FOREACH( const TcandPtr& cand, (const std::vector<TcandPtr>&)pfTau->isolationPFChargedHadrCands() ) {
       if ( qcuts_->filterCandRef(cand) ) {
         isoCharged_.push_back(cand);
       }
     }
   }
   if ( includeGammas_ ) {
-    BOOST_FOREACH( const TcandPtr& cand, pfTau->isolationPFGammaCands() ) {
+    BOOST_FOREACH( const TcandPtr& cand, (const std::vector<TcandPtr>&)pfTau->isolationPFGammaCands() ) {
       if ( qcuts_->filterCandRef(cand) ) {
         isoNeutral_.push_back(cand);
       }
