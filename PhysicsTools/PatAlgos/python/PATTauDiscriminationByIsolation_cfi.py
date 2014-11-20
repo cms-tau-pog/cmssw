@@ -1,7 +1,8 @@
 import FWCore.ParameterSet.Config as cms
 
 from RecoTauTag.RecoTau.PFRecoTauQualityCuts_cfi import PFTauQualityCuts
-from RecoTauTag.RecoTau.TauDiscriminatorTools import requireLeadTrack
+#from RecoTauTag.RecoTau.TauDiscriminatorTools import requireLeadTrack
+from RecoTauTag.RecoTau.TauDiscriminatorTools import noPrediscriminants
 
 patTauDiscriminationByIsolation = cms.EDProducer("PATTauDiscriminationByIsolation",
     PATTauProducer = cms.InputTag('patTaus'), #tau collection to discriminate
@@ -9,7 +10,15 @@ patTauDiscriminationByIsolation = cms.EDProducer("PATTauDiscriminationByIsolatio
     # Require leading pion ensures that:
     # 1) these is at least one track above threshold (0.5 GeV) in the signal cone
     # 2) a track in the signal cone has pT > 5 GeV
-    Prediscriminants = requireLeadTrack,
+    # todo: clean up
+    Prediscriminants = cms.PSet(
+        BooleanOperator = cms.string("and"),
+        leadTrack = cms.PSet(
+            Producer = cms.InputTag('patTauDiscriminationByLeadingTrackFinding'),
+            cut = cms.double(0.5)
+        )
+    ),
+    #Prediscriminants = requireLeadTrack,
 
     # Select which collections to use for isolation. You can select one or both
     ApplyDiscriminationByECALIsolation = cms.bool(True), # use PFGammas when isolating

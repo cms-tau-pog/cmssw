@@ -165,7 +165,13 @@ RecoTauVertexAssociator::associatedVertex(const PFTau& tau) const {
 
 reco::VertexRef
 RecoTauVertexAssociator::associatedVertex(const pat::Tau& tau) const {
-	reco::PFJetRef jetRef = tau.pfJetRef();
+	reco::PFJetRef jetRef;
+	if(tau.isPFTau()){
+		jetRef = tau.pfJetRef();
+	}else{
+		return tau.pfEssential().pv_;
+
+	}
 	return associatedVertex(*jetRef);
 }
 
