@@ -2,7 +2,6 @@ import FWCore.ParameterSet.Config as cms
 
 from RecoTauTag.RecoTau.PFRecoTauQualityCuts_cfi import PFTauQualityCuts
 #from RecoTauTag.RecoTau.TauDiscriminatorTools import requireLeadTrack
-from RecoTauTag.RecoTau.TauDiscriminatorTools import noPrediscriminants
 
 patTauDiscriminationByIsolation = cms.EDProducer("PATTauDiscriminationByIsolation",
     PATTauProducer = cms.InputTag('patTaus'), #tau collection to discriminate
