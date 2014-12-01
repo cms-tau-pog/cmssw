@@ -53,14 +53,19 @@ void PATTauIDEmbedder::produce(edm::Event& evt, const edm::EventSetup& es)
 	for(pat::TauCollection::const_iterator inputTau = inputTaus->begin(); inputTau != inputTaus->end(); ++inputTau, tau_idx++){
 		pat::Tau outputTau(*inputTau);
 		pat::TauRef inputTauRef(inputTaus, tau_idx);
-		std::vector<pat::Tau::IdPair> tauIds(tauIDSrcs_.size());
+		size_t nTauIds = inputTau->tauIDs().size();
+		std::vector<pat::Tau::IdPair> tauIds(nTauIds+tauIDSrcs_.size());
+
+		for(size_t i = 0; i < nTauIds; ++i){
+			tauIds[i] = inputTau->tauIDs().at(i);
+		}
 
 		for(size_t i = 0; i < tauIDSrcs_.size(); ++i){
 			edm::Handle<pat::PATTauDiscriminator> tauDiscr;
 			evt.getByToken(patTauIDTokens_[i], tauDiscr);
 
-			tauIds[i].first = tauIDSrcs_[i].first;
-			tauIds[i].second = (*tauDiscr)[inputTauRef];
+			tauIds[nTauIds+i].first = tauIDSrcs_[i].first;
+			tauIds[nTauIds+i].second = (*tauDiscr)[inputTauRef];
 		}
 
 		outputTau.setTauIDs(tauIds);
