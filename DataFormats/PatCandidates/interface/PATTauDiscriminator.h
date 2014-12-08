@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace pat {
-  typedef edm::AssociationVector<edm::RefProd<TauCollection>,std::vector<float> > PATTauDiscriminatorBase;
+  typedef edm::AssociationVector<pat::TauRefProd,std::vector<float> > PATTauDiscriminatorBase;
 
   class PATTauDiscriminator : public PATTauDiscriminatorBase {
   public:
@@ -15,7 +15,7 @@ namespace pat {
       PATTauDiscriminatorBase()
       { }
 
-    PATTauDiscriminator(const edm::RefProd<TauCollection> & ref) :
+    PATTauDiscriminator(const pat::TauRefProd & ref) :
       PATTauDiscriminatorBase(ref)
       { }
 

@@ -23,6 +23,72 @@
 using namespace reco;
 using namespace std;
 
+namespace candidateExtractor_namespace{
+	template<typename Ttau, typename TcandPtr>
+	class candidateExtractorT
+	{
+	public:
+		candidateExtractorT(){}
+		TcandPtr leadChargedHadr(const Ttau& tau) const { return tau->leadPFChargedHadrCand(); }
+		TcandPtr leadNeutral(const Ttau& tau) const	{ return tau->leadPFNeutralCand(); }
+		TcandPtr lead(const Ttau& tau) const { return tau->leadPFCand(); }
+		std::vector<TcandPtr> isoChargedHadr(const Ttau& tau) const { return tau->isolationPFChargedHadrCands(); }
+		std::vector<TcandPtr> isoNeutralHadr(const Ttau& tau) const { return tau->isolationPFNeutrHadrCands(); }
+		std::vector<TcandPtr> isoGamma(const Ttau& tau) const { return tau->isolationPFGammaCands(); }
+		std::vector<TcandPtr> signalChargedHadr(const Ttau& tau) const { return tau->signalPFChargedHadrCands(); }
+	};
+
+	template<>
+	class candidateExtractorT<pat::TauRef, pat::PackedCandidatePtr>
+	{
+	public:
+		candidateExtractorT(){}
+		pat::PackedCandidatePtr leadChargedHadr(const pat::TauRef& tau) const { return pat::PackedCandidatePtr(tau->leadChargedHadrCand().id(),dynamic_cast<const pat::PackedCandidate*>(tau->leadChargedHadrCand().get()),tau->leadChargedHadrCand().key()); }
+		pat::PackedCandidatePtr leadNeutral(const pat::TauRef& tau) const { return pat::PackedCandidatePtr(tau->leadNeutralCand().id(),dynamic_cast<const pat::PackedCandidate*>(tau->leadNeutralCand().get()),tau->leadNeutralCand().key()); }
+		pat::PackedCandidatePtr lead(const pat::TauRef& tau) const { return pat::PackedCandidatePtr(tau->leadCand().id(),dynamic_cast<const pat::PackedCandidate*>(tau->leadCand().get()),tau->leadCand().key()); }
+		std::vector<pat::PackedCandidatePtr> isoChargedHadr(const pat::TauRef& tau) const {
+			std::vector<pat::PackedCandidatePtr> ret;
+			ret.resize(tau->isolationChargedHadrCands().size());
+			if(!tau->isPFTau()){
+				for(size_t iICH = 0; iICH < tau->isolationChargedHadrCands().size(); ++iICH){
+					ret.at(iICH) = pat::PackedCandidatePtr(tau->isolationChargedHadrCands()[iICH].id(),dynamic_cast<const pat::PackedCandidate*>(tau->isolationChargedHadrCands()[iICH].get()),tau->isolationChargedHadrCands()[iICH].key());
+				}
+			}
+			return ret;
+		}
+		std::vector<pat::PackedCandidatePtr> isoNeutralHadr(const pat::TauRef& tau) const {
+			std::vector<pat::PackedCandidatePtr> ret;
+			ret.resize(tau->isolationNeutrHadrCands().size());
+			if(!tau->isPFTau()){
+				for(size_t iICH = 0; iICH < tau->isolationNeutrHadrCands().size(); ++iICH){
+					ret.at(iICH) = pat::PackedCandidatePtr(tau->isolationNeutrHadrCands()[iICH].id(),dynamic_cast<const pat::PackedCandidate*>(tau->isolationNeutrHadrCands()[iICH].get()),tau->isolationNeutrHadrCands()[iICH].key());
+				}
+			}
+			return ret;
+		}
+		std::vector<pat::PackedCandidatePtr> isoGamma(const pat::TauRef& tau) const {
+			std::vector<pat::PackedCandidatePtr> ret;
+			ret.resize(tau->isolationGammaCands().size());
+			if(!tau->isPFTau()){
+				for(size_t iICH = 0; iICH < tau->isolationGammaCands().size(); ++iICH){
+					ret.at(iICH) = pat::PackedCandidatePtr(tau->isolationGammaCands()[iICH].id(),dynamic_cast<const pat::PackedCandidate*>(tau->isolationGammaCands()[iICH].get()),tau->isolationGammaCands()[iICH].key());
+				}
+			}
+			return ret;
+		}
+		std::vector<pat::PackedCandidatePtr> signalChargedHadr(const pat::TauRef& tau) const {
+			std::vector<pat::PackedCandidatePtr> ret;
+			ret.resize(tau->signalChargedHadrCands().size());
+			if(!tau->isPFTau()){
+				for(size_t iICH = 0; iICH < tau->signalChargedHadrCands().size(); ++iICH){
+					ret.at(iICH) = pat::PackedCandidatePtr(tau->signalChargedHadrCands()[iICH].id(),dynamic_cast<const pat::PackedCandidate*>(tau->signalChargedHadrCands()[iICH].get()),tau->signalChargedHadrCands()[iICH].key());
+				}
+			}
+			return ret;
+		}
+	};
+};
+
 template<typename Ttau, typename TcandColl, typename TcandPtr, typename Tdiscr>
 class RecoTauDiscriminationByIsolationT : public Tdiscr
 {
@@ -260,11 +326,13 @@ RecoTauDiscriminationByIsolationT<Ttau, TcandColl, TcandPtr, Tdiscr>::discrimina
     std::cout << " tau: Pt = " << pfTau->pt() << ", eta = " << pfTau->eta() << ", phi = " << pfTau->phi() << std::endl;
   }
 
+  candidateExtractor_namespace::candidateExtractorT<Ttau, TcandPtr> candidates;
+
   // collect the objects we are working with (ie tracks, tracks+gammas, etc)
   isoCharged_.clear();
-  isoCharged_.reserve(pfTau->isolationPFChargedHadrCands().size());
+  isoCharged_.reserve(candidates.isoChargedHadr(pfTau).size());
   isoNeutral_.clear();
-  isoNeutral_.reserve(pfTau->isolationPFGammaCands().size());
+  isoNeutral_.reserve(candidates.isoNeutralHadr(pfTau).size());
   isoPU_.clear();
   isoPU_.reserve(chargedPFCandidatesInEvent_.size());
 
@@ -278,39 +346,38 @@ RecoTauDiscriminationByIsolationT<Ttau, TcandColl, TcandPtr, Tdiscr>::discrimina
     } else {
       std::cout << "pv: N/A" << std::endl;
     }
-    if ( pfTau->leadPFChargedHadrCand().isNonnull() ) {
+    if ( candidates.leadChargedHadr(pfTau).isNonnull() ) {
       std::cout << "leadPFChargedHadron:"
-		<< " Pt = " << pfTau->leadPFChargedHadrCand()->pt() << ","
-		<< " eta = " << pfTau->leadPFChargedHadrCand()->eta() << ","
-		<< " phi = " << pfTau->leadPFChargedHadrCand()->phi() << std::endl;
+    	<< " Pt = " << candidates.leadChargedHadr(pfTau)->pt() << ","
+    	<< " eta = " << candidates.leadChargedHadr(pfTau)->eta() << ","
+    	<< " phi = " << candidates.leadChargedHadr(pfTau)->phi() << std::endl;
     } else {
       std::cout << "leadPFChargedHadron: N/A" << std::endl;
     }
   }
-
   // CV: isolation is not well defined in case primary vertex or leading charged hadron do not exist
-  if ( !(pv.isNonnull() && pfTau->leadPFChargedHadrCand().isNonnull()) ) return 0.;
+  if ( !(pv.isNonnull() && candidates.leadChargedHadr(pfTau).isNonnull()) ) return 0.;
 
   qcuts_->setPV(pv);
-  qcuts_->setLeadTrack(pfTau->leadPFChargedHadrCand());
+  qcuts_->setLeadTrack(candidates.leadChargedHadr(pfTau));
 
   if ( applyDeltaBeta_ ) {
     pileupQcutsGeneralQCuts_->setPV(pv);
-    pileupQcutsGeneralQCuts_->setLeadTrack(pfTau->leadPFChargedHadrCand());
+    pileupQcutsGeneralQCuts_->setLeadTrack(candidates.leadChargedHadr(pfTau));
     pileupQcutsPUTrackSelection_->setPV(pv);
-    pileupQcutsPUTrackSelection_->setLeadTrack(pfTau->leadPFChargedHadrCand());
+    pileupQcutsPUTrackSelection_->setLeadTrack(candidates.leadChargedHadr(pfTau));
   }
 
   // Load the tracks if they are being used.
   if ( includeTracks_ ) {
-    BOOST_FOREACH( const TcandPtr& cand, (const std::vector<TcandPtr>&)pfTau->isolationPFChargedHadrCands() ) {
+	BOOST_FOREACH( const TcandPtr& cand, (const std::vector<TcandPtr>&)candidates.isoChargedHadr(pfTau) ) {
       if ( qcuts_->filterCandRef(cand) ) {
         isoCharged_.push_back(cand);
       }
     }
   }
   if ( includeGammas_ ) {
-    BOOST_FOREACH( const TcandPtr& cand, (const std::vector<TcandPtr>&)pfTau->isolationPFGammaCands() ) {
+    BOOST_FOREACH( const TcandPtr& cand, (const std::vector<TcandPtr>&)candidates.isoGamma(pfTau) ) {
       if ( qcuts_->filterCandRef(cand) ) {
         isoNeutral_.push_back(cand);
       }

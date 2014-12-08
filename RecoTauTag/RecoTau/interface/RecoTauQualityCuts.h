@@ -57,6 +57,8 @@ class RecoTauQualityCuts
   /// If null, this will set the lead track ref null.
   void setLeadTrack(const reco::PFCandidateRef& leadCand) const;
   void setLeadTrack(const pat::PackedCandidateRef& leadCand) const;
+  /// workaround for packed candidates
+  void setLeadTrack(const pat::PackedCandidatePtr& leadCand) const;
 
   /// Filter a single Track
   bool filterTrack(const reco::TrackBaseRef& track) const;

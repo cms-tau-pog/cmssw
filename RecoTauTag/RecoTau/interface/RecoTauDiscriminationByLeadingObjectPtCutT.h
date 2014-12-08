@@ -9,8 +9,33 @@
 #define RECOTAUDISCRIMINATIONBYLEADINGOBJECTPTCUTT_H_
 
 #include "RecoTauTag/RecoTau/interface/TauDiscriminationProducerBase.h"
+#include "DataFormats/TauReco/interface/PFTau.h"
+#include "DataFormats/PatCandidates/interface/Tau.h"
 
 using namespace reco;
+
+namespace candidateExtractor_namespace
+{
+	template<typename T>
+	class candidateExtractorT
+	{
+	public:
+		candidateExtractorT(){}
+		reco::PFCandidatePtr leadChargedHadr(const T& tau) const { return tau->leadPFChargedHadrCand(); }
+		reco::PFCandidatePtr leadNeutral(const T& tau) const	{ return tau->leadPFNeutralCand(); }
+		reco::PFCandidatePtr lead(const T& tau) const { return tau->leadPFCand(); }
+	};
+
+	template<>
+	class candidateExtractorT<pat::TauRef>
+	{
+	public:
+		candidateExtractorT(){}
+		reco::CandidatePtr leadChargedHadr(const pat::TauRef& tau) const { return tau->leadChargedHadrCand(); }
+		reco::CandidatePtr leadNeutral(const pat::TauRef& tau) const { return tau->leadNeutralCand(); }
+		reco::CandidatePtr lead(const pat::TauRef& tau) const { return tau->leadCand(); }
+	};
+};
 
 template<typename Ttau, typename Tdiscr>
 class RecoTauDiscriminationByLeadingObjectPtCutT : public Tdiscr
@@ -30,14 +55,15 @@ private:
 template<typename Ttau, typename Tdiscr>
 double RecoTauDiscriminationByLeadingObjectPtCutT<Ttau, Tdiscr>::discriminate(const Ttau& tau)
 {
+	candidateExtractor_namespace::candidateExtractorT<Ttau> candidates;
 	double leadObjectPt = -1.;
 	if( chargedOnly_ )
 	{
 		// consider only charged hadrons.  note that the leadPFChargedHadrCand is the highest pt
 		// charged signal cone object above the quality cut level (typically 0.5 GeV).
-	    if( tau->leadPFChargedHadrCand().isNonnull() )
+	    if( candidates.leadChargedHadr(tau).isNonnull() )
 	    {
-	    	leadObjectPt = tau->leadPFChargedHadrCand()->pt();
+	    	leadObjectPt = candidates.leadChargedHadr(tau)->pt();
 	    }
 	}
 	else
@@ -51,8 +77,11 @@ double RecoTauDiscriminationByLeadingObjectPtCutT<Ttau, Tdiscr>::discriminate(co
 		{
 			leadObjectPt = tau->leadPFCand()->pt();
 		}
+		if( candidates.lead(tau).isNonnull() && candidates.leadChargedHadr(tau).isNonnull() )
+		{
+			leadObjectPt = candidates.lead(tau)->pt();
+		}
 	}
-
 	return ( leadObjectPt > minPtLeadObject_ ? 1. : 0. );
 }
 

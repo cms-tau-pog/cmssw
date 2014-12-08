@@ -638,4 +638,14 @@ void RecoTauQualityCuts::setLeadTrack(const pat::PackedCandidateRef& leadCand) c
 	}
 }
 
+void RecoTauQualityCuts::setLeadTrack(const pat::PackedCandidatePtr& leadCand) const
+{
+	if( leadCand.isNonnull() ) {
+		leadTrack_ = leadCand->pseudoTrack();
+	} else {
+		// Set null
+		leadTrack_ = reco::Track();
+	}
+}
+
 }} // end namespace reco::tau

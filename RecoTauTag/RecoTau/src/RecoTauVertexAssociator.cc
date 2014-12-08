@@ -169,8 +169,8 @@ RecoTauVertexAssociator::associatedVertex(const pat::Tau& tau) const {
 	if(tau.isPFTau()){
 		jetRef = tau.pfJetRef();
 	}else{
-		return tau.pfEssential().pv_;
-
+		// return tau.primaryVertex(); //todo: primary vertex is currently not saved in pfEssential
+		return pat::PackedCandidatePtr(tau.leadChargedHadrCand().id(),dynamic_cast<const pat::PackedCandidate*>(tau.leadChargedHadrCand().get()),tau.leadChargedHadrCand().key())->vertexRef();
 	}
 	return associatedVertex(*jetRef);
 }

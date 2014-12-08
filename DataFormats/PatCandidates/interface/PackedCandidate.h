@@ -433,6 +433,7 @@ namespace pat {
   typedef std::vector<pat::PackedCandidate> PackedCandidateCollection;
   typedef edm::Ref<pat::PackedCandidateCollection> PackedCandidateRef;
   typedef edm::RefVector<pat::PackedCandidateCollection> PackedCandidateRefVector;
+  typedef edm::Ptr<pat::PackedCandidate> PackedCandidatePtr;
 }
 
 #endif
