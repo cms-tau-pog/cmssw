@@ -37,7 +37,7 @@ patSlimmedTauDiscriminationByIsolation = cms.EDProducer("PATSlimmedTauDiscrimina
     # Delta-Beta corrections to remove Pileup
     applyDeltaBetaCorrection = cms.bool(False),
     particleFlowSrc = cms.InputTag("packedPFCandidates"),
-    vertexSrc = cms.InputTag("offlineSlimmedPrimaryVertices"),#PFTauQualityCuts.primaryVertexSrc,
+    vertexSrc = PFTauQualityCuts.primaryVertexSrc,
 
     # This must correspond to the cone size of the algorithm which built the
     # tau. (or if customOuterCone option is used, the custom cone size)

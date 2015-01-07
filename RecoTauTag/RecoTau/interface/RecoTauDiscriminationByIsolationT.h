@@ -332,7 +332,7 @@ RecoTauDiscriminationByIsolationT<Ttau, TcandColl, TcandPtr, Tdiscr>::discrimina
   isoCharged_.clear();
   isoCharged_.reserve(candidates.isoChargedHadr(pfTau).size());
   isoNeutral_.clear();
-  isoNeutral_.reserve(candidates.isoNeutralHadr(pfTau).size());
+  isoNeutral_.reserve(candidates.isoGamma(pfTau).size());
   isoPU_.clear();
   isoPU_.reserve(chargedPFCandidatesInEvent_.size());
 
@@ -370,14 +370,14 @@ RecoTauDiscriminationByIsolationT<Ttau, TcandColl, TcandPtr, Tdiscr>::discrimina
 
   // Load the tracks if they are being used.
   if ( includeTracks_ ) {
-	BOOST_FOREACH( const TcandPtr& cand, (const std::vector<TcandPtr>&)candidates.isoChargedHadr(pfTau) ) {
+	BOOST_FOREACH( const TcandPtr& cand, candidates.isoChargedHadr(pfTau) ) {
       if ( qcuts_->filterCandRef(cand) ) {
         isoCharged_.push_back(cand);
       }
     }
   }
   if ( includeGammas_ ) {
-    BOOST_FOREACH( const TcandPtr& cand, (const std::vector<TcandPtr>&)candidates.isoGamma(pfTau) ) {
+    BOOST_FOREACH( const TcandPtr& cand, candidates.isoGamma(pfTau) ) {
       if ( qcuts_->filterCandRef(cand) ) {
         isoNeutral_.push_back(cand);
       }
