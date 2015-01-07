@@ -17,6 +17,8 @@
 
 #include "DataFormats/PatCandidates/interface/CandKinResolution.h"
 
+#include "DataFormats/PatCandidates/interface/PATTauDiscriminator.h"
+
 namespace DataFormats_PatCandidates {
   struct dictionaryother {
 
@@ -50,6 +52,16 @@ namespace DataFormats_PatCandidates {
   std::vector<pat::CandKinResolution>  v_ckr;
   pat::CandKinResolutionValueMap vm_ckr;
   edm::Wrapper<pat::CandKinResolutionValueMap> w_vm_ckr;
+
+  pat::PATTauDiscriminatorBase                     pattdiscr_b;
+  pat::PATTauDiscriminator                         pattdiscr_o;
+  pat::PATTauDiscriminatorRef                      pattdiscr_r;
+  pat::PATTauDiscriminatorRefProd                  pattdiscr_rp;
+  pat::PATTauDiscriminatorRefVector                pattdiscr_rv;
+  edm::Wrapper<pat::PATTauDiscriminator>           pattdiscr_w;
+
+  std::pair<pat::TauRef, float>                              pattdiscr_p;
+  std::vector<std::pair<pat::TauRef, float> >                pattdiscr_v;
 
   };
 

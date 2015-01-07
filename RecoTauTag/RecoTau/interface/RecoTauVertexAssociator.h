@@ -27,6 +27,7 @@
 #include "DataFormats/Common/interface/AssociationMap.h"
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
 #include <map>
+#include "DataFormats/PatCandidates/interface/Tau.h"
 
 // Forward declarations
 namespace edm {
@@ -59,6 +60,7 @@ class RecoTauVertexAssociator {
     /// Convenience function to get the PV associated to the jet that
     /// seeded this tau.
     reco::VertexRef associatedVertex(const PFTau& tau) const;
+    reco::VertexRef associatedVertex(const pat::Tau& tau) const;
     /// Load the vertices from the event.
     void setEvent(const edm::Event& evt);
     reco::TrackBaseRef getLeadTrack(const PFJet& jet) const;

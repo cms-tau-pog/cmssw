@@ -38,6 +38,7 @@ namespace pat {
   class Tau;
   typedef std::vector<Tau>              TauCollection; 
   typedef edm::Ref<TauCollection>       TauRef; 
+  typedef edm::RefProd<TauCollection>	TauRefProd;
   typedef edm::RefVector<TauCollection> TauRefVector; 
 }
 

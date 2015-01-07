@@ -50,15 +50,23 @@ class RecoTauQualityCuts
   /// Update the leading track
   void setLeadTrack(const reco::TrackRef& leadTrack) const;
   void setLeadTrack(const reco::PFCandidate& leadCand) const;
+  void setLeadTrack(const reco::Track& leadTrack) const;
+  void setLeadTrack(const pat::PackedCandidate& leadCand) const;
 
   /// Update the leading track (using reference)
   /// If null, this will set the lead track ref null.
   void setLeadTrack(const reco::PFCandidateRef& leadCand) const;
+  void setLeadTrack(const pat::PackedCandidateRef& leadCand) const;
+  /// workaround for packed candidates
+  void setLeadTrack(const pat::PackedCandidatePtr& leadCand) const;
 
   /// Filter a single Track
   bool filterTrack(const reco::TrackBaseRef& track) const;
   bool filterTrack(const reco::TrackRef& track) const;
   bool filterTrack(const reco::Track& track) const;
+
+  // Helper function for filter track
+  bool deltaZToLeadTrack(const reco::Track& leadTrack, const reco::Track& track, const VertexRef pv, double cut) const;
 
   /// Filter a collection of Tracks
   template<typename Coll> 
@@ -102,7 +110,8 @@ class RecoTauQualityCuts
   // The current primary vertex
   mutable reco::VertexRef pv_;
   // The current lead track references
-  mutable reco::TrackBaseRef leadTrack_;
+  mutable reco::TrackBaseRef leadTrackRef_;
+  mutable reco::Track leadTrack_;
 
   double minTrackPt_;
   double maxTrackChi2_;

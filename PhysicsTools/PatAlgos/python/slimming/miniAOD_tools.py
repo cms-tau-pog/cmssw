@@ -1,5 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
+
 def miniAOD_customizeCommon(process):
     process.patMuons.isoDeposits = cms.PSet()
     process.patElectrons.isoDeposits = cms.PSet()
@@ -72,7 +74,7 @@ def miniAOD_customizeCommon(process):
     btagDiscriminators = ['jetBProbabilityBJetTags', 'jetProbabilityBJetTags', 'trackCountingHighPurBJetTags', 'trackCountingHighEffBJetTags', 'simpleSecondaryVertexHighEffBJetTags',
                          'simpleSecondaryVertexHighPurBJetTags', 'combinedSecondaryVertexBJetTags' , 'combinedInclusiveSecondaryVertexBJetTags' ],
     )
-    #add CA8   
+    #add AK8   
     from PhysicsTools.PatAlgos.tools.jetTools import addJetCollection
     addJetCollection(process, labelName = 'AK8', jetSource = cms.InputTag('ak8PFJetsCHS'),algo= 'AK', rParam = 0.8, jetCorrections = ('AK7PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute']), 'None') )
     process.patJetsAK8.userData.userFloats.src = [] # start with empty list of user floats
@@ -100,6 +102,26 @@ def miniAOD_customizeCommon(process):
     process.cmsTopTagPFJetsCHSLinksAK8.matched = cms.InputTag("cmsTopTagPFJetsCHS")
     process.patJetsAK8.userData.userFloats.src += ['cmsTopTagPFJetsCHSLinksAK8']
 
+    #QJetsAdder
+    if hasattr(process,"RandomNumberGeneratorService") :
+	    process.RandomNumberGeneratorService.QJetsAdderAK8 = cms.PSet(initialSeed = cms.untracked.uint32(7))
+	    process.RandomNumberGeneratorService.QJetsAdder = cms.PSet(initialSeed = cms.untracked.uint32(7))
+    else:
+	    process.RandomNumberGeneratorService = cms.Service("RandomNumberGeneratorService", QJetsAdderAK8 = cms.PSet(initialSeed = cms.untracked.uint32(7)), QJetsAdder = cms.PSet(initialSeed = cms.untracked.uint32(7)))
+    process.load('RecoJets.JetProducers.qjetsadder_cfi')
+    process.QJetsAdderAK8 = process.QJetsAdder.clone()
+    process.QJetsAdderAK8.src = cms.InputTag("ak8PFJetsCHS")
+    process.QJetsAdderAK8.jetRad = cms.double(0.8)
+    process.QJetsAdderAK8.jetAlgo = cms.string('AK')
+    process.patJetsAK8.userData.userFloats.src += ['QJetsAdderAK8:QjetsVolatility']
+
+    # add Njetiness
+    process.load('RecoJets.JetProducers.nJettinessAdder_cfi')
+    process.NjettinessAK8 = process.Njettiness.clone()
+    process.NjettinessAK8.src = cms.InputTag("ak8PFJetsCHS")
+    process.NjettinessAK8.cone = cms.double(0.8)
+    process.patJetsAK8.userData.userFloats.src += ['NjettinessAK8:tau1','NjettinessAK8:tau2','NjettinessAK8:tau3']
+
     #
     from PhysicsTools.PatAlgos.tools.trigTools import switchOnTriggerStandAlone
     switchOnTriggerStandAlone( process, outputModule = '' )
@@ -107,9 +129,12 @@ def miniAOD_customizeCommon(process):
     #
     # apply type I/type I + II PFMEt corrections to pat::MET object
     # and estimate systematic uncertainties on MET
+    # reclustering of ak4 jets needed in 70X
+   # from RecoJets.JetProducers.ak4PFJets_cfi import ak4PFJets
+    process.load("RecoJets.JetProducers.ak4PFJets_cfi")
     from PhysicsTools.PatUtils.tools.metUncertaintyTools import runMEtUncertainties
-    addJetCollection(process, postfix   = "ForMetUnc", labelName = 'AK5PF', jetSource = cms.InputTag('ak5PFJets'), jetCorrections = ('AK5PF', ['L1FastJet', 'L2Relative', 'L3Absolute'], ''))
-    runMEtUncertainties(process,jetCollection="selectedPatJetsAK5PFForMetUnc", outputModule=None)
+    addJetCollection(process, postfix   = "ForMetUnc", labelName = 'AK4PF', jetSource = cms.InputTag('ak4PFJets'), jetCorrections = ('AK4PF', ['L1FastJet', 'L2Relative', 'L3Absolute'], ''), rParam = 0.4, genJetCollection=cms.InputTag('ak4GenJets') )
+    runMEtUncertainties(process,jetCollection="selectedPatJetsAK4PFForMetUnc", outputModule=None)
 
     #keep this after all addJetCollections otherwise it will attempt computing them also for stuf with no taginfos
     #Some useful BTAG vars
@@ -118,14 +143,39 @@ def miniAOD_customizeCommon(process):
     '?(tagInfoSecondaryVertex().nVertices()>0)?(tagInfoSecondaryVertex().secondaryVertex(0).nTracks):(0)',
     '?(tagInfoSecondaryVertex().nVertices()>0)?(tagInfoSecondaryVertex().flightDistance(0).value):(0)',
     '?(tagInfoSecondaryVertex().nVertices()>0)?(tagInfoSecondaryVertex().flightDistance(0).significance):(0)',
+    '?(tagInfoSecondaryVertex().nVertices()>0)?(tagInfoSecondaryVertex().secondaryVertex(0).p4.x):(0)',
+    '?(tagInfoSecondaryVertex().nVertices()>0)?(tagInfoSecondaryVertex().secondaryVertex(0).p4.y):(0)',
+    '?(tagInfoSecondaryVertex().nVertices()>0)?(tagInfoSecondaryVertex().secondaryVertex(0).p4.z):(0)',
+    '?(tagInfoSecondaryVertex().nVertices()>0)?(tagInfoSecondaryVertex().secondaryVertex(0).position.x):(0)',
+    '?(tagInfoSecondaryVertex().nVertices()>0)?(tagInfoSecondaryVertex().secondaryVertex(0).position.y):(0)',
+    '?(tagInfoSecondaryVertex().nVertices()>0)?(tagInfoSecondaryVertex().secondaryVertex(0).position.z):(0)',
     )
-    process.patJets.userData.userFunctionLabels = cms.vstring('vtxMass','vtxNtracks','vtx3DVal','vtx3DSig')
+    process.patJets.userData.userFunctionLabels = cms.vstring('vtxMass','vtxNtracks','vtx3DVal','vtx3DSig','vtxPx','vtxPy','vtxPz','vtxPosX','vtxPosY','vtxPosZ')
     process.patJets.tagInfoSources = cms.VInputTag(cms.InputTag("secondaryVertexTagInfos"))
     process.patJets.addTagInfos = cms.bool(True)
     #
     ## PU JetID
     process.load("PhysicsTools.PatAlgos.slimming.pileupJetId_cfi")
     process.patJets.userData.userFloats.src = [ cms.InputTag("pileupJetId:fullDiscriminant"), ]
+
+    #VID Electron IDs
+    electron_ids = ['RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_CSA14_50ns_V1_cff',
+                    'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_CSA14_PU20bx25_V0_cff',
+                    'RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV50_CSA14_25ns_cff',
+                    'RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV50_CSA14_startup_cff']
+    switchOnVIDElectronIdProducer(process)
+    process.egmGsfElectronIDs.physicsObjectSrc = \
+        cms.InputTag("reducedEgamma","reducedGedGsfElectrons")
+    process.electronIDValueMapProducer.src = \
+        cms.InputTag("reducedEgamma","reducedGedGsfElectrons")
+    process.electronIDValueMapProducer.ebReducedRecHitCollection = \
+        cms.InputTag("reducedEgamma","reducedEBRecHits")
+    process.electronIDValueMapProducer.eeReducedRecHitCollection = \
+        cms.InputTag("reducedEgamma","reducedEERecHits") 
+    process.electronIDValueMapProducer.esReducedRecHitCollection = \
+        cms.InputTag("reducedEgamma","reducedESRecHits")
+    for idmod in electron_ids:
+        setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
 def miniAOD_customizeMC(process):
     process.muonMatch.matched = "prunedGenParticles"
@@ -134,6 +184,7 @@ def miniAOD_customizeMC(process):
     process.photonMatch.matched = "prunedGenParticles"
     process.photonMatch.src = cms.InputTag("reducedEgamma","reducedGedPhotons")
     process.tauMatch.matched = "prunedGenParticles"
+    process.tauGenJets.GenParticles = "prunedGenParticles"
     process.patJetPartonMatch.matched = "prunedGenParticles"
     process.patJetPartonMatch.mcStatus = [ 3, 23 ]
     process.patJetGenJetMatch.matched = "slimmedGenJets"

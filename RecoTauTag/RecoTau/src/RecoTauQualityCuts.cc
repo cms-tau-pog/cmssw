@@ -33,10 +33,22 @@ bool ptMin(const TrackBaseRef& track, double cut)
   return (track->pt() > cut);
 }
 
+bool ptMin(const Track& track, double cut)
+{
+	//std::cout << "<ptMin>: Pt = " << track.pt() << ", cut = " << cut << std::endl;
+	return (track.pt() > cut);
+}
+
 bool ptMin_cand(const PFCandidate& cand, double cut) 
 {
   //std::cout << "<ptMin_cand>: Pt = " << cand.pt() << ", cut = " << cut << std::endl;
   return (cand.pt() > cut);
+}
+
+bool ptMin_cand(const pat::PackedCandidate& cand, double cut)
+{
+	//std::cout << "<ptMin_cand>: Pt = " << cand.pt() << ", cut = " << cut << std::endl;
+	return (cand.pt() > cut);
 }
 
 bool etMin_cand(const PFCandidate& cand, double cut) 
@@ -45,11 +57,24 @@ bool etMin_cand(const PFCandidate& cand, double cut)
   return (cand.et() > cut);
 }
 
+bool etMin_cand(const pat::PackedCandidate& cand, double cut)
+{
+	//std::cout << "<etMin_cand>: Et = " << cand.et() << ", cut = " << cut << std::endl;
+	return (cand.et() > cut);
+}
+
 bool trkPixelHits(const TrackBaseRef& track, int cut) 
 {
   // For some reason, the number of hits is signed
   //std::cout << "<trkPixelHits>: #Pxl hits = " << track->hitPattern().numberOfValidPixelHits() << ", cut = " << cut << std::endl;
   return (track->hitPattern().numberOfValidPixelHits() >= cut);
+}
+
+bool trkPixelHits(const Track& track, int cut)
+{
+	// For some reason, the number of hits is signed
+	//std::cout << "<trkPixelHits>: #Pxl hits = " << track.hitPattern().numberOfValidPixelHits() << ", cut = " << cut << std::endl;
+	return (track.hitPattern().numberOfValidPixelHits() >= cut);
 }
 
 bool trkPixelHits_cand(const PFCandidate& cand, int cut) 
@@ -65,10 +90,24 @@ bool trkPixelHits_cand(const PFCandidate& cand, int cut)
   }
 }
 
+bool trkPixelHits_cand(const pat::PackedCandidate& cand, int cut)
+{
+	// For some reason, the number of hits is signed
+	auto track = cand.pseudoTrack();
+	//std::cout << "<trkPixelHits_cand>: #Pxl hits = " << trkPixelHits(track, cut) << ", cut = " << cut << std::endl;
+	return trkPixelHits(track, cut);
+}
+
 bool trkTrackerHits(const TrackBaseRef& track, int cut) 
 {
   //std::cout << "<trkTrackerHits>: #Trk hits = " << track->hitPattern().numberOfValidHits() << ", cut = " << cut << std::endl;
   return (track->hitPattern().numberOfValidHits() >= cut);
+}
+
+bool trkTrackerHits(const Track& track, int cut)
+{
+	//std::cout << "<trkTrackerHits>: #Trk hits = " << track.hitPattern().numberOfValidHits() << ", cut = " << cut << std::endl;
+	return (track.hitPattern().numberOfValidHits() >= cut);
 }
 
 bool trkTrackerHits_cand(const PFCandidate& cand, int cut) 
@@ -81,6 +120,13 @@ bool trkTrackerHits_cand(const PFCandidate& cand, int cut)
     //std::cout << "<trkTrackerHits>: #Trk hits = N/A, cut = " << cut << std::endl;
     return false;
   }
+}
+
+bool trkTrackerHits_cand(const pat::PackedCandidate& cand, int cut)
+{
+	auto track = cand.pseudoTrack();
+	//std::cout << "<trkTrackerHits>: #Trk hits = " << track.hitPattern().numberOfValidHits() << ", cut = " << cut << std::endl;
+	return trkTrackerHits(track, cut);
 }
 
 bool trkTransverseImpactParameter(const TrackBaseRef& track, const reco::VertexRef* pv, double cut) 
@@ -97,6 +143,20 @@ bool trkTransverseImpactParameter(const TrackBaseRef& track, const reco::VertexR
   return (std::fabs(track->dxy((*pv)->position())) <= cut);
 }
 
+bool trkTransverseImpactParameter(const Track& track, const reco::VertexRef* pv, double cut)
+{
+	if( pv->isNull() ) {
+		edm::LogError("QCutsNoPrimaryVertex") << "Primary vertex Ref in " <<
+				"RecoTauQualityCuts is invalid. - trkTransverseImpactParameter";
+		return false;
+	}
+	//std::cout << "<trkTransverseImpactParameter>:" << std::endl;
+	//std::cout << " track: Pt = " << track.pt() << ", eta = " << track.eta() << ", phi = " << track.phi() << std::endl;
+	//std::cout << " vertex: x = " << (*pv)->position().x() << ", y = " << (*pv)->position().y() << ", z = " << (*pv)->position().z() << std::endl;
+	//std::cout << "--> dxy = " << std::fabs(track.dxy((*pv)->position())) << " (cut = " << cut << ")" << std::endl;
+	return (std::fabs(track.dxy((*pv)->position())) <= cut);
+}
+
 bool trkTransverseImpactParameter_cand(const PFCandidate& cand, const reco::VertexRef* pv, double cut) 
 {
   auto track = getTrackRef(cand);
@@ -106,6 +166,12 @@ bool trkTransverseImpactParameter_cand(const PFCandidate& cand, const reco::Vert
     //std::cout << "<trkTransverseImpactParameter_cand>: dXY = N/A, cut = " << cut << std::endl;
     return false;
   }
+}
+
+bool trkTransverseImpactParameter_cand(const pat::PackedCandidate& cand, const reco::VertexRef* pv, double cut)
+{
+	auto track = cand.pseudoTrack();
+	return trkTransverseImpactParameter(track, pv, cut);
 }
 
 bool trkLongitudinalImpactParameter(const TrackBaseRef& track, const reco::VertexRef* pv, double cut) 
@@ -122,6 +188,20 @@ bool trkLongitudinalImpactParameter(const TrackBaseRef& track, const reco::Verte
   return (std::fabs(track->dz((*pv)->position())) <= cut);
 }
 
+bool trkLongitudinalImpactParameter(const Track& track, const reco::VertexRef* pv, double cut)
+{
+	if( pv->isNull() ) {
+		edm::LogError("QCutsNoPrimaryVertex") << "Primary vertex Ref in " <<
+				"RecoTauQualityCuts is invalid. - trkLongitudinalImpactParameter";
+		return false;
+	}
+	//std::cout << "<trkLongitudinalImpactParameter>:" << std::endl;
+	//std::cout << " track: Pt = " << track.pt() << ", eta = " << track.eta() << ", phi = " << track.phi() << std::endl;
+	//std::cout << " vertex: x = " << (*pv)->position().x() << ", y = " << (*pv)->position().y() << ", z = " << (*pv)->position().z() << std::endl;
+	//std::cout << "--> dz = " << std::fabs(track.dz((*pv)->position())) << " (cut = " << cut << ")" << std::endl;
+	return (std::fabs(track.dz((*pv)->position())) <= cut);
+}
+
 bool trkLongitudinalImpactParameter_cand(const PFCandidate& cand, const reco::VertexRef* pv, double cut) 
 {
   auto track = getTrackRef(cand);
@@ -131,6 +211,12 @@ bool trkLongitudinalImpactParameter_cand(const PFCandidate& cand, const reco::Ve
     //std::cout << "<trkLongitudinalImpactParameter_cand>: dZ = N/A, cut = " << cut << std::endl;
     return false;
   }
+}
+
+bool trkLongitudinalImpactParameter_cand(const pat::PackedCandidate& cand, const reco::VertexRef* pv, double cut)
+{
+	auto track = cand.pseudoTrack();
+	return trkLongitudinalImpactParameter(track, pv, cut);
 }
 
 /// DZ cut, with respect to the current lead rack
@@ -144,11 +230,22 @@ bool trkLongitudinalImpactParameterWrtTrack(const TrackBaseRef& track, const rec
   return (std::fabs(track->dz((*pv)->position()) - (*leadTrack)->dz((*pv)->position())) <= cut);
 }
 
+bool trkLongitudinalImpactParameterWrtTrack(const Track& track, const Track* leadTrack, const reco::VertexRef* pv, double cut)
+{
+	return (std::fabs(track.dz((*pv)->position()) - (*leadTrack).dz((*pv)->position())) <= cut);
+}
+
 bool trkLongitudinalImpactParameterWrtTrack_cand(const PFCandidate& cand, const reco::TrackBaseRef* leadTrack, const reco::VertexRef* pv, double cut) 
 {
   auto track = getTrackRef(cand);
   if ( track.isNonnull() ) return trkLongitudinalImpactParameterWrtTrack(track, leadTrack, pv, cut);
   else return false;
+}
+
+bool trkLongitudinalImpactParameterWrtTrack_cand(const pat::PackedCandidate& cand, const Track* leadTrack, const reco::VertexRef* pv, double cut)
+{
+	auto track = cand.pseudoTrack();
+	return trkLongitudinalImpactParameterWrtTrack(track, leadTrack, pv, cut);
 }
 
 bool minTrackVertexWeight(const TrackBaseRef& track, const reco::VertexRef* pv, double cut) 
@@ -165,6 +262,13 @@ bool minTrackVertexWeight(const TrackBaseRef& track, const reco::VertexRef* pv, 
   return ((*pv)->trackWeight(track) >= cut);
 }
 
+// TrackBaseRef/TrackRef not available in miniAOD format => no trackWeights available
+bool minTrafckVertexWeight(const Track& track, const reco::VertexRef* pv, double cut)
+{
+	//std::cout << "<minTrackVertexWeight>: weight = N/A, cut = " << cut << std::endl;
+	return false;
+}
+
 bool minTrackVertexWeight_cand(const PFCandidate& cand, const reco::VertexRef* pv, double cut) 
 {
   auto track = getTrackRef(cand);
@@ -176,10 +280,22 @@ bool minTrackVertexWeight_cand(const PFCandidate& cand, const reco::VertexRef* p
   }
 }
 
+// TrackBaseRef/TrackRef not available in miniAOD format => no trackWeights available
+bool minTrackVertexWeight_cand(const pat::PackedCandidate& cand, const reco::VertexRef* pv, double cut)
+{
+	//std::cout << "<minTrackVertexWeight_cand>: weight = N/A, cut = " << cut << std::endl;
+	return false;
+}
+
 bool trkChi2(const TrackBaseRef& track, double cut) 
 {
   //std::cout << "<trkChi2>: chi^2 = " << track->normalizedChi2() << ", cut = " << cut << std::endl;
   return (track->normalizedChi2() <= cut);
+}
+
+bool trkChi2(const Track& track, double cut)
+{
+	return (track.normalizedChi2() <= cut);
 }
 
 bool trkChi2_cand(const PFCandidate& cand, double cut) 
@@ -192,6 +308,12 @@ bool trkChi2_cand(const PFCandidate& cand, double cut)
     //std::cout << "<trkChi2_cand>: chi^2 = N/A, cut = " << cut << std::endl;
     return false;
   }
+}
+
+bool trkChi2_cand(const pat::PackedCandidate& cand, double cut)
+{
+	auto track = cand.pseudoTrack();
+	return trkChi2(track, cut);
 }
 
 // And a set of qcuts
@@ -335,6 +457,13 @@ std::pair<edm::ParameterSet, edm::ParameterSet> factorizePUQCuts(const edm::Para
   return std::make_pair(puCuts, nonPUCuts);
 }
 
+bool RecoTauQualityCuts::deltaZToLeadTrack(const reco::Track& leadTrack, const reco::Track& track, const VertexRef pv, double cut) const
+{
+	if(!(std::fabs(track.dz(pv->position()) - leadTrack.dz(pv->position())) <= cut))
+		return false;
+	return true;
+}
+
 bool RecoTauQualityCuts::filterTrack(const reco::TrackBaseRef& track) const
 {
   return filterTrack_(track);
@@ -365,14 +494,8 @@ bool RecoTauQualityCuts::filterTrack(const reco::Track& track) const
       return false;
   if(maxDeltaZ_ >= 0 && !(std::fabs(track.dz(pv_->position())) <= maxDeltaZ_)) return false;
   if(maxDeltaZToLeadTrack_ >= 0) {
-    if ( leadTrack_.isNull()) {
-      edm::LogError("QCutsNoValidLeadTrack") << "Lead track Ref in " <<
-        "RecoTauQualityCuts is invalid. - filterTrack";
-      return false;
-    }
-
-    if(!(std::fabs(track.dz(pv_->position()) - leadTrack_->dz(pv_->position())) <= maxDeltaZToLeadTrack_))
-      return false;
+	  if(!deltaZToLeadTrack(leadTrack_, track, pv_, maxDeltaZToLeadTrack_))
+		  return false;
   }
 
   return true;
@@ -474,22 +597,55 @@ bool RecoTauQualityCuts::filterCand(const pat::PackedCandidate& cand) const
 
 void RecoTauQualityCuts::setLeadTrack(const reco::TrackRef& leadTrack) const 
 {
-  leadTrack_ = reco::TrackBaseRef(leadTrack);
+  leadTrackRef_ = reco::TrackBaseRef(leadTrack);
+  if(leadTrackRef_.isNonnull()) leadTrack_ = *leadTrackRef_.get();
+}
+
+void RecoTauQualityCuts::setLeadTrack(const reco::Track& leadTrack) const
+{
+	leadTrack_ = leadTrack;
 }
 
 void RecoTauQualityCuts::setLeadTrack(const reco::PFCandidate& leadCand) const 
 {
-  leadTrack_ = getTrackRef(leadCand);
+  leadTrackRef_ = getTrackRef(leadCand);
+  if(leadTrackRef_.isNonnull()) leadTrack_ = *leadTrackRef_.get();
+}
+
+void RecoTauQualityCuts::setLeadTrack(const pat::PackedCandidate& leadCand) const
+{
+	leadTrack_ = leadCand.pseudoTrack();
 }
 
 void RecoTauQualityCuts::setLeadTrack(const reco::PFCandidateRef& leadCand) const 
 {
   if ( leadCand.isNonnull() ) {
-    leadTrack_ = getTrackRef(*leadCand);
+    leadTrackRef_ = getTrackRef(*leadCand);
   } else {
     // Set null
-    leadTrack_ = reco::TrackBaseRef();
+    leadTrackRef_ = reco::TrackBaseRef();
   }
+  if(leadTrackRef_.isNonnull()) leadTrack_ = *leadTrackRef_.get();
+}
+
+void RecoTauQualityCuts::setLeadTrack(const pat::PackedCandidateRef& leadCand) const
+{
+	if( leadCand.isNonnull() ) {
+		leadTrack_ = leadCand->pseudoTrack();
+	} else {
+		// Set null
+		leadTrack_ = reco::Track();
+	}
+}
+
+void RecoTauQualityCuts::setLeadTrack(const pat::PackedCandidatePtr& leadCand) const
+{
+	if( leadCand.isNonnull() ) {
+		leadTrack_ = leadCand->pseudoTrack();
+	} else {
+		// Set null
+		leadTrack_ = reco::Track();
+	}
 }
 
 }} // end namespace reco::tau

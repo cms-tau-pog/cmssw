@@ -61,6 +61,20 @@
   <class name="std::vector<pat::CandKinResolution>" />
   <class name="pat::CandKinResolutionValueMap" />
   <class name="edm::Wrapper<pat::CandKinResolutionValueMap>" />
+  
+  <class name="pat::PATTauDiscriminatorBase">
+    <field name="transientVector_" transient="true"/>
+  </class>
+
+  <class name="pat::PATTauDiscriminator" ClassVersion="11">
+   <version ClassVersion="11" checksum="2682565170"/>
+    <!-- <field name="transientVector_" transient="true"/> -->
+    <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+  <class name="pat::PATTauDiscriminatorRef"/>
+  <class name="pat::PATTauDiscriminatorRefProd"/>
+  <class name="pat::PATTauDiscriminatorRefVector"/>
+  <class name="edm::Wrapper<pat::PATTauDiscriminator>"/>
 
   </selection>
  <exclusion>
