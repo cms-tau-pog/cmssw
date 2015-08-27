@@ -108,3 +108,8 @@ PFTau = cms.Sequence(
     recoTauClassicHPSSequence
 )
 
+
+def runPFTauFromAOD(process):
+    process.load('RecoTauTag.Configuration.RecoPFTauTag_cff')
+    return process
+
