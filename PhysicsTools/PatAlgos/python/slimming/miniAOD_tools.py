@@ -202,7 +202,7 @@ def miniAOD_customizeCommon(process):
         cms.InputTag('reducedEgamma','reducedGedPhotons')
     for idmod in photon_ids:
         setupAllVIDIdsInModule(process,idmod,setupVIDPhotonSelection,None,False)
-    
+
     # Adding puppi jets
     process.load('CommonTools.PileupAlgos.Puppi_cff')
     process.load('RecoJets.JetProducers.ak4PFJetsPuppi_cfi')
