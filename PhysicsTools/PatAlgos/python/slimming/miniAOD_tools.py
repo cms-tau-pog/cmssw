@@ -202,6 +202,31 @@ def miniAOD_customizeCommon(process):
         cms.InputTag('reducedEgamma','reducedGedPhotons')
     for idmod in photon_ids:
         setupAllVIDIdsInModule(process,idmod,setupVIDPhotonSelection,None,False)
+    
+    #Adding  Boosted Subjets taus
+    from PhysicsTools.PatAlgos.tools.helpers import cloneProcessingSnippet
+    from PhysicsTools.PatAlgos.tools.helpers import massSearchReplaceAnyInputTag
+    process.load("RecoTauTag.Configuration.boostedHPSPFTaus_cff")
+    process.load("RecoTauTag.Configuration.RecoPFTauTag_cff")
+    process.ptau = cms.Path( process.PFTau )
+    process.PATTauSequence = cms.Sequence(process.PFTau+process.makePatTaus+process.selectedPatTaus)
+    process.PATTauSequenceBoosted = cloneProcessingSnippet(process,process.PATTauSequence, "Boosted")
+    process.recoTauAK4PFJets08RegionBoosted.src = cms.InputTag('boostedTauSeeds')
+    process.recoTauAK4PFJets08RegionBoosted.pfCandSrc = cms.InputTag('particleFlow')
+    process.recoTauAK4PFJets08RegionBoosted.pfCandAssocMapSrc = cms.InputTag('boostedTauSeeds', 'pfCandAssocMapForIsolation')
+    process.ak4PFJetsLegacyHPSPiZerosBoosted.jetSrc = cms.InputTag('boostedTauSeeds')
+    process.ak4PFJetsRecoTauChargedHadronsBoosted.jetSrc = cms.InputTag('boostedTauSeeds')
+    process.ak4PFJetsRecoTauChargedHadronsBoosted.builders[1].dRcone = cms.double(0.3)
+    process.ak4PFJetsRecoTauChargedHadronsBoosted.builders[1].dRconeLimitedToJetArea = cms.bool(True)
+    process.combinatoricRecoTausBoosted.jetSrc = cms.InputTag('boostedTauSeeds')
+    process.combinatoricRecoTausBoosted.modifiers.remove(process.combinatoricRecoTausBoosted.modifiers[3])
+    # process.combinatoricRecoTausBoosted.builders[0].pfCandSrc = cms.InputTag('pfNoPileUpForBoostedTaus')
+    process.combinatoricRecoTausBoosted.builders[0].pfCandSrc = cms.InputTag('particleFlow')
+    massSearchReplaceAnyInputTag(process.PATTauSequenceBoosted,cms.InputTag("ak4PFJets"),cms.InputTag("boostedTauSeeds"))  
+    process.slimmedTausBoosted = process.slimmedTaus.clone(src = cms.InputTag("selectedPatTausBoosted"))
+    #----------------------------------------------------------------------------    
+
+    
 
     # Adding puppi jets
     process.load('CommonTools.PileupAlgos.Puppi_cff')
@@ -298,6 +323,10 @@ def miniAOD_customizeMC(process):
     process.photonMatch.src = cms.InputTag("reducedEgamma","reducedGedPhotons")
     process.tauMatch.matched = "prunedGenParticles"
     process.tauGenJets.GenParticles = "prunedGenParticles"
+    #Boosted taus
+    process.tauMatchBoosted.matched = "prunedGenParticles"
+    process.tauGenJetsBoosted.GenParticles = "prunedGenParticles"
+    #
     process.patJetPartons.particles = "prunedGenParticles"
     process.patJetPartonMatch.matched = "prunedGenParticles"
     process.patJetPartonMatch.mcStatus = [ 3, 23 ]
@@ -307,6 +336,7 @@ def miniAOD_customizeMC(process):
     process.patElectrons.embedGenMatch = False
     process.patPhotons.embedGenMatch = False
     process.patTaus.embedGenMatch = False
+    process.patTausBoosted.embedGenMatch = False
     process.patJets.embedGenPartonMatch = False
     #also jet flavour must be switched
     process.patJetFlavourAssociation.rParam = 0.4

@@ -26,13 +26,13 @@ namespace contrib{
 
   /////////////////////////////
   // constructor
-  CMSBoostedTauSeedingAlgorithm::CMSBoostedTauSeedingAlgorithm(double iminPt, 			       
+  CMSBoostedTauSeedingAlgorithm::CMSBoostedTauSeedingAlgorithm(double iminPt, double imaxEta, 			       
 							       double iminMassDrop, double imaxMassDrop,
 							       double iminY, double imaxY,
 							       double iminDeltaR, double imaxDeltaR,
 							       int maxDepth, 
 							       int verbosity) 
-    : ptMin_(iminPt), 
+    : ptMin_(iminPt),etaMax_(imaxEta), 
       muMin_(iminMassDrop), muMax_(imaxMassDrop), 
       yMin_(iminY), yMax_(imaxY), 
       dRMin_(iminDeltaR), dRMax_(imaxDeltaR),
@@ -102,7 +102,9 @@ namespace contrib{
       double mu = ( jet.m() > 0. ) ? 
 	sqrt(std::max(subjet1.m2(), subjet2.m2())/jet.m2()) : -1.;
       // check if subjets pass selection required for seeding boosted tau reconstruction
-      if ( subjet1.pt() > ptMin_ && subjet2.pt() > ptMin_ && dR > dRMin_ && dR < dRMax_ && mu > muMin_ && mu < muMax_ && kT < (yMax_*jet.m2()) && kT > (yMin_*jet.m2()) ) {
+      if ( subjet1.pt() > ptMin_ && subjet2.pt() > ptMin_
+	   && fabs(subjet1.eta()) < etaMax_ && fabs(subjet2.eta()) < etaMax_  // CG inserted maximum eta cut
+	   && dR > dRMin_ && dR < dRMax_ && mu > muMin_ && mu < muMax_ && kT < (yMax_*jet.m2()) && kT > (yMin_*jet.m2()) ) {
 	subjetsFound = true;
 	return std::make_pair(subjet1, subjet2); 
       } else if ( subjet1.pt() > ptMin_ ) {

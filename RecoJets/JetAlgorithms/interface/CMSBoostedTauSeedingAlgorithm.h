@@ -54,7 +54,7 @@ namespace contrib{
 
   public:
     // constructors
-    CMSBoostedTauSeedingAlgorithm(double ptMin, double muMin, double muMax, double yMin, double yMax, double dRMin, double dRMax, int maxDepth, int verbosity = 0);
+    CMSBoostedTauSeedingAlgorithm(double ptMin,double etaMax, double muMin, double muMax, double yMin, double yMax, double dRMin, double dRMax, int maxDepth, int verbosity = 0);
 
     // destructor
     virtual ~CMSBoostedTauSeedingAlgorithm(){}
@@ -73,6 +73,7 @@ namespace contrib{
 
   private: 
     double ptMin_;  ///< minimum sub-jet pt
+    double etaMax_; ///< maximum sub-jet eta
     double muMin_;  ///< the min value of the mass-drop parameter
     double muMax_;  ///< the max value of the mass-drop parameter
     double yMin_;   ///< the min value of the asymmetry parameter
@@ -100,7 +101,7 @@ namespace contrib{
     ///  \param rec     the recombiner from the underlying cluster sequence
     CMSBoostedTauSeedingAlgorithmStructure(const PseudoJet& result_jet, const JetDefinition::Recombiner* rec = 0) 
       : CompositeJetStructure(result_jet.pieces(), rec), 
-        _mu(0.0), _y(0.0), _dR(0.0), _pt(0.0) 
+        _mu(0.0), _y(0.0), _dR(0.0), _pt(0.0) , _eta(0.0) 
     {}
 
     /// returns the mass-drop ratio, pieces[0].m()/jet.m()
@@ -116,6 +117,9 @@ namespace contrib{
     /// returns the value of pt
     inline double pt() const { return _pt; }
 
+    /// returns the value of eta
+    inline double eta() const { return _eta; }
+
     // /// returns the original jet (before tagging)
     //const PseudoJet& original() const { return _original_jet; }
 
@@ -124,6 +128,7 @@ namespace contrib{
     double _y;               ///< the value of the asymmetry parameter
     double _dR;              ///< the value of the dR parameter
     double _pt;              ///< the value of the pt parameter
+    double _eta;             ///< the value of the eta parameter
     // allow the tagger to set these
     friend class CMSBoostedTauSeedingAlgorithm;
   };
