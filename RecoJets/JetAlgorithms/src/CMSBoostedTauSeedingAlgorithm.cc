@@ -26,13 +26,13 @@ namespace contrib{
 
   /////////////////////////////
   // constructor
-  CMSBoostedTauSeedingAlgorithm::CMSBoostedTauSeedingAlgorithm(double iminPt, double imaxEta, 			       
+  CMSBoostedTauSeedingAlgorithm::CMSBoostedTauSeedingAlgorithm(double iminPt, // double imaxEta,
 							       double iminMassDrop, double imaxMassDrop,
 							       double iminY, double imaxY,
 							       double iminDeltaR, double imaxDeltaR,
 							       int maxDepth, 
 							       int verbosity) 
-    : ptMin_(iminPt),etaMax_(imaxEta), 
+    : ptMin_(iminPt),// etaMax_(imaxEta),  
       muMin_(iminMassDrop), muMax_(imaxMassDrop), 
       yMin_(iminY), yMax_(imaxY), 
       dRMin_(iminDeltaR), dRMax_(imaxDeltaR),
@@ -85,6 +85,8 @@ namespace contrib{
 
   std::pair<PseudoJet, PseudoJet> CMSBoostedTauSeedingAlgorithm::findSubjets(const PseudoJet& jet, int depth, bool& subjetsFound) const 
   {
+    
+    float etaMax_ =3.;  //CG: hardcoded cut
     if ( verbosity_ >= 2 ) {
       std::cout << "<CMSBoostedTauSeedingAlgorithm::findSubjets>:" << std::endl;
       std::cout << " jet: Pt = " << jet.pt() << ", eta = " << jet.eta() << ", phi = " << jet.phi() << ", mass = " << jet.m() << std::endl;

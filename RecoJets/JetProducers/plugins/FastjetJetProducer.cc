@@ -138,7 +138,7 @@ FastjetJetProducer::FastjetJetProducer(const edm::ParameterSet& iConfig)
     muCut_=-1.0;
     yCut_=-1.0;
     subjetPtMin_ = -1.0; 
-    subjetEtaMax_ = -1.0;
+    //subjetEtaMax_ = 100.0;
     muMin_ = -1.0;
     muMax_ = -1.0;
     yMin_ = -1.0;
@@ -188,7 +188,7 @@ FastjetJetProducer::FastjetJetProducer(const edm::ParameterSet& iConfig)
     if ( iConfig.exists("useCMSBoostedTauSeedingAlgorithm") ) {
       useCMSBoostedTauSeedingAlgorithm_ = iConfig.getParameter<bool>("useCMSBoostedTauSeedingAlgorithm");
       subjetPtMin_ = iConfig.getParameter<double>("subjetPtMin");
-      subjetEtaMax_ = iConfig.getParameter<double>("subjetEtaMax");
+      // subjetEtaMax_ = iConfig.getParameter<double>("subjetEtaMax");
       muMin_ = iConfig.getParameter<double>("muMin");
       muMax_ = iConfig.getParameter<double>("muMax");
       yMin_ = iConfig.getParameter<double>("yMin");
@@ -455,7 +455,8 @@ void FastjetJetProducer::runAlgorithm( edm::Event & iEvent, edm::EventSetup cons
     }
     if ( useCMSBoostedTauSeedingAlgorithm_ ) {
       fastjet::contrib::CMSBoostedTauSeedingAlgorithm * tau_tagger = 
-	new fastjet::contrib::CMSBoostedTauSeedingAlgorithm ( subjetPtMin_, subjetEtaMax_, muMin_, muMax_, yMin_, yMax_, dRMin_, dRMax_, maxDepth_, verbosity_ );
+	new fastjet::contrib::CMSBoostedTauSeedingAlgorithm ( subjetPtMin_, // subjetEtaMax_,
+							      muMin_, muMax_, yMin_, yMax_, dRMin_, dRMax_, maxDepth_, verbosity_ );
       transformers.push_back( transformer_ptr(tau_tagger ));
     }
     if ( useTrimming_ ) {

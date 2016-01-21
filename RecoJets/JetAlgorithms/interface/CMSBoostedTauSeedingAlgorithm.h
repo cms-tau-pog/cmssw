@@ -54,7 +54,7 @@ namespace contrib{
 
   public:
     // constructors
-    CMSBoostedTauSeedingAlgorithm(double ptMin,double etaMax, double muMin, double muMax, double yMin, double yMax, double dRMin, double dRMax, int maxDepth, int verbosity = 0);
+    CMSBoostedTauSeedingAlgorithm(double ptMin,/* double etaMax, */ double muMin, double muMax, double yMin, double yMax, double dRMin, double dRMax, int maxDepth, int verbosity = 0);
 
     // destructor
     virtual ~CMSBoostedTauSeedingAlgorithm(){}

@@ -103,7 +103,7 @@ protected:
 
 
   double subjetPtMin_;        /// for CMSBoostedTauSeedingAlgorithm : subjet pt min  
-  double subjetEtaMax_;        /// for CMSBoostedTauSeedingAlgorithm : subjet eta max
+  /* double subjetEtaMax_;        /// for CMSBoostedTauSeedingAlgorithm : subjet eta max */
   double muMin_;              /// for CMSBoostedTauSeedingAlgorithm : min mass-drop
   double muMax_;              /// for CMSBoostedTauSeedingAlgorithm : max mass-drop
   double yMin_;               /// for CMSBoostedTauSeedingAlgorithm : min asymmetry

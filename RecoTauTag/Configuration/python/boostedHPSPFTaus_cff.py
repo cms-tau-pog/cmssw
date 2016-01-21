@@ -24,7 +24,7 @@ import RecoJets.JetProducers.CMSBoostedTauSeedingParameters_cfi as boostedTaus3
 ca8PFJetsCHSprunedForBoostedTaus = boostedTaus2.ak4PFJets.clone(
     boostedTaus3.CMSBoostedTauSeedingParameters,
     #src = cms.InputTag('pfNoPileUpForBoostedTaus'),
-    jetPtMin = cms.double(50.0),
+    jetPtMin = cms.double(100.0),
     doAreaFastjet = cms.bool(True),
     nFilt = cms.int32(100),
     rParam = cms.double(0.8),
@@ -32,8 +32,8 @@ ca8PFJetsCHSprunedForBoostedTaus = boostedTaus2.ak4PFJets.clone(
     writeCompound = cms.bool(True),
     jetCollInstanceName = cms.string('subJetsForSeedingBoostedTaus'),
     maxDepth = cms.int32(100),
-    subjetPtMin = cms.double(10.0),
-    subjetEtaMax = cms.double(3.0)
+    subjetPtMin = cms.double(10.0)#,
+  # subjetEtaMax = cms.double(3.0)
 )
 
 boostedTauSeeds = cms.EDProducer("BoostedTauSeedsProducer",
