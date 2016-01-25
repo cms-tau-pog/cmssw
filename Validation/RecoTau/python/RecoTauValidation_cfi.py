@@ -8,24 +8,17 @@ import os
 
 
 """
-
    RecoTauValidation_cfi.py
-
    Contains the standard tau validation parameters.  It is organized into
    the following sections.
-
    DENOMINATOR 
      
      Set common kinematic cuts (pt > 5 and eta < 2.5) on the denominator source.
      Note that the denominator depends on the type of test (signal/background/e etc)
-
      The denominator kinematic cutter requires that 
-
    HISTOGRAMS
-
      Produce numerator and denominator histgorams used to produce
      tau efficiency plots
-
         Provides sequence: 
           TauValNumeratorAndDenominator 
         Requires:
@@ -35,51 +28,37 @@ import os
    
      Using numerator and denominators, calculate and store
      the efficiency curves
-
         Provides sequence:
           TauEfficiencies
         Requires:
           TauValNumeratorAndDenominator
-
    PLOTTING
-
      Plot curves calculated in efficiency, in both an overlay mode
      showing overall performance for a release, and the indvidual 
      discriminator efficiency compared to a given release
-
         Provides sequence:
           loadTau
           plotTauValidation
           loadAndPlotTauValidation
-
         Requires:
           TauEfficiencies, external root file to compare to
-
      Plotting must be executed in a separate cmsRun job!
-
    UTILITIES
      
      Various scripts to automate things...
-
-
 """
 
 """
-
 DENOMINATOR
-
 """
 
 kinematicSelectedTauValDenominatorCut = cms.string('pt > 5. && abs(eta) < 2.5')
 denominator = cms.InputTag("kinematicSelectedTauValDenominator")
 
 """
-
 HISTOGRAMS
-
         Plot the pt/eta/energy/phi spectrum of PFTaus that pass 
         a series of PFTauDiscriminator cuts.
-
         These will be used as the numerator/denominators of the
         efficiency calculations
 """
@@ -190,11 +169,8 @@ proc.TauValNumeratorAndDenominator = cms.Sequence(
    )
 
 """
-
 EFFICIENCY
-
         Tau efficiency calculations
-
         Define the Efficiency curves to produce.  Each
         efficiency producer takes the numberator and denominator
         histograms and the dependent variables.
@@ -225,12 +201,9 @@ proc.TauEfficiencies = cms.Sequence(
    )
 
 """
-
 PLOTTING
-
         loadTau:  load two separate TauVal root files into the DQM
                   so the plotter can access them
-
 """
 
 loadTau = cms.EDAnalyzer("TauDQMFileLoader",
@@ -418,9 +391,7 @@ standardCompareTestAndReference = cms.PSet(
 ##       )
 
 """
-
 UTILITIES
-
 """
 
 class ApplyFunctionToSequence:
