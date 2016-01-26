@@ -1,5 +1,10 @@
 import FWCore.ParameterSet.Config as cms
 
+#
+# This object is used to make changes for different running scenarios
+#
+from Configuration.StandardSequences.Eras import eras
+
 SiPixelHitEfficiencySource = cms.EDAnalyzer("SiPixelHitEfficiencySource",
     src = cms.InputTag("siPixelHitEfficiency"),
     debug = cms.untracked.bool(False),                          
@@ -13,8 +18,12 @@ SiPixelHitEfficiencySource = cms.EDAnalyzer("SiPixelHitEfficiencySource",
     bladeOn = cms.untracked.bool(True),
     diskOn = cms.untracked.bool(False),
     updateEfficiencies = cms.untracked.bool(False), 
+    vtxsrc = cms.untracked.string('offlinePrimaryVertices'),
 
-    trajectoryInput = cms.InputTag('rsWithMaterialTracksP5'),  
+    trajectoryInput = cms.InputTag('generalTracks'),  
     applyEdgeCut = cms.untracked.bool(False),
     nSigma_EdgeCut = cms.untracked.double(2.)             
 )
+
+# Modify for if the phase 1 pixel detector is active
+eras.phase1Pixel.toModify( SiPixelHitEfficiencySource, isUpgrade=cms.untracked.bool(True) )

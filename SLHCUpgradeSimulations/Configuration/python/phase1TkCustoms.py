@@ -208,12 +208,12 @@ def customise_Reco(process,pileup):
     # from RecoTracker_cff.py to RecoTrackerPhase1PU140_cff.py
 
     # remove all the tracking first
-    itIndex=process.globalreco.index(process.trackingGlobalReco)
-    grIndex=process.reconstruction.index(process.globalreco)
+    itIndex=process.globalreco_tracking.index(process.trackingGlobalReco)
+    grIndex=process.globalreco.index(process.globalreco_tracking)
 
-    process.reconstruction.remove(process.globalreco)
-    process.globalreco.remove(process.iterTracking)
-    process.globalreco.remove(process.electronSeedsSeq)
+    process.globalreco.remove(process.globalreco_tracking)
+    process.globalreco_tracking.remove(process.iterTracking)
+    process.globalreco_tracking.remove(process.electronSeedsSeq)
     process.reconstruction_fromRECO.remove(process.trackingGlobalReco)
     process.reconstruction_fromRECO.remove(process.electronSeedsSeq)
     process.reconstruction_fromRECO.remove(process.initialStepSeedLayers)
@@ -310,8 +310,8 @@ def customise_Reco(process,pileup):
     # add the correct tracking back in
     process.load("RecoTracker.Configuration.RecoTrackerPhase1PU"+str(nPU)+"_cff")
 
-    process.globalreco.insert(itIndex,process.trackingGlobalReco)
-    process.reconstruction.insert(grIndex,process.globalreco)
+    process.globalreco_tracking.insert(itIndex,process.trackingGlobalReco)
+    process.globalreco.insert(grIndex,process.globalreco_tracking)
     #Note process.reconstruction_fromRECO is broken
     
     # End of new tracking configuration which can be removed if new Reconstruction is used.
@@ -344,6 +344,7 @@ def customise_Reco(process,pileup):
     # CPE for other steps
     process.siPixelRecHits.CPE = cms.string('PixelCPEGeneric')
     # Turn of template use in tracking (iterative steps handled inside their configs)
+    process.duplicateTrackCandidates.ttrhBuilderName = 'WithTrackAngle'
     process.mergedDuplicateTracks.TTRHBuilder = 'WithTrackAngle'
     process.ctfWithMaterialTracks.TTRHBuilder = 'WithTrackAngle'
     process.muonSeededSeedsInOut.TrackerRecHitBuilder=cms.string('WithTrackAngle')
@@ -352,6 +353,25 @@ def customise_Reco(process,pileup):
     process.muons1stStep.TrackerKinkFinderParameters.TrackerRecHitBuilder=cms.string('WithTrackAngle')
     process.regionalCosmicTracks.TTRHBuilder=cms.string('WithTrackAngle')
     process.cosmicsVetoTracksRaw.TTRHBuilder=cms.string('WithTrackAngle')
+    process.trackerDrivenElectronSeeds.TTRHBuilder = 'WithTrackAngle'
+    process.globalMuons.GLBTrajBuilderParameters.GlbRefitterParameters.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.globalMuons.GLBTrajBuilderParameters.TrackTransformer.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.globalMuons.GLBTrajBuilderParameters.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.globalMuons.TrackLoaderParameters.TTRHBuilder = 'WithTrackAngle'
+    process.tevMuons.RefitterParameters.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.tevMuons.TrackLoaderParameters.TTRHBuilder = 'WithTrackAngle'
+    process.muonSeededTracksOutInDisplaced.TTRHBuilder = 'WithTrackAngle'
+    process.duplicateDisplacedTrackCandidates.ttrhBuilderName = 'WithTrackAngle'
+    process.mergedDuplicateDisplacedTracks.TTRHBuilder = 'WithTrackAngle'
+    process.displacedGlobalMuons.GLBTrajBuilderParameters.GlbRefitterParameters.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.displacedGlobalMuons.GLBTrajBuilderParameters.TrackTransformer.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.displacedGlobalMuons.GLBTrajBuilderParameters.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.displacedGlobalMuons.TrackLoaderParameters.TTRHBuilder = 'WithTrackAngle'
+    process.glbTrackQual.RefitterParameters.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.globalSETMuons.GLBTrajBuilderParameters.GlbRefitterParameters.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.globalSETMuons.GLBTrajBuilderParameters.TrackTransformer.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.globalSETMuons.GLBTrajBuilderParameters.TrackerRecHitBuilder = 'WithTrackAngle'
+    process.globalSETMuons.TrackLoaderParameters.TTRHBuilder = 'WithTrackAngle'
     # End of pixel template needed section
 
     # Remove, for now, the pre-cluster-splitting clustering step

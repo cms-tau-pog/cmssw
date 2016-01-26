@@ -384,6 +384,11 @@ namespace pat {
     }
     /// set impact parameters covariance
 
+    // Note: mask is also the maximum value
+    enum trackHitShiftsAndMasks {
+      trackPixelHitsMask = 7,
+      trackStripHitsMask = 31, trackStripHitsShift = 3
+    };
     virtual void setTrackProperties( const reco::Track & tk, const reco::Track::CovarianceMatrix & covariance) {
       dxydxy_ = covariance(3,3);
       dxydz_ = covariance(3,4);
@@ -396,10 +401,10 @@ namespace pat {
 
       normalizedChi2_ = tk.normalizedChi2();
       int numberOfPixelHits_ = tk.hitPattern().numberOfValidPixelHits();
-      if (numberOfPixelHits_ > 7) numberOfPixelHits_ = 7;
+      if (numberOfPixelHits_ > trackPixelHitsMask) numberOfPixelHits_ = trackPixelHitsMask;
       int numberOfStripHits_ = tk.hitPattern().numberOfValidHits() - numberOfPixelHits_;
-      if (numberOfStripHits_ > 31) numberOfStripHits_ = 31;
-      packedHits_ = (numberOfPixelHits_&0x7) | (numberOfStripHits_ << 3);
+      if (numberOfStripHits_ > trackStripHitsMask) numberOfStripHits_ = trackStripHitsMask;
+      packedHits_ = (numberOfPixelHits_&trackPixelHitsMask) | (numberOfStripHits_ << trackStripHitsShift);
       packBoth();
     }
 
@@ -407,8 +412,8 @@ namespace pat {
 	setTrackProperties(tk,tk.covariance());
     }	
  
-    int numberOfPixelHits() const { return packedHits_ & 0x7; }
-    int numberOfHits() const { return (packedHits_ >> 3) + numberOfPixelHits(); }
+    int numberOfPixelHits() const { return packedHits_ & trackPixelHitsMask; }
+    int numberOfHits() const { return (packedHits_ >> trackStripHitsShift) + numberOfPixelHits(); }
 	
     /// vertex position
     virtual const Point & vertex() const { maybeUnpackBoth(); return *vertex_; }//{ if (fromPV_) return Point(0,0,0); else return Point(0,0,100); }
@@ -590,7 +595,7 @@ namespace pat {
     void packVtx(bool unpackAfterwards=true) ;
     void unpackVtx() const ;
     void maybeUnpackBoth() const { if (!p4c_) unpack(); if (!vertex_) unpackVtx(); }
-    void packBoth() { pack(false); packVtx(false); delete p4_.exchange(nullptr); delete p4c_.exchange(nullptr); unpack(); unpackVtx(); } // do it this way, so that we don't loose precision on the angles before computing dxy,dz
+    void packBoth() { pack(false); packVtx(false); delete p4_.exchange(nullptr); delete p4c_.exchange(nullptr); delete vertex_.exchange(nullptr); unpack(); unpackVtx(); } // do it this way, so that we don't loose precision on the angles before computing dxy,dz
     void unpackTrk() const ;
 
     int8_t packedPuppiweight_;

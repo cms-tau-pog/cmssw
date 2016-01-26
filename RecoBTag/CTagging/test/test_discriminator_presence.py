@@ -3,12 +3,18 @@ import pprint
 import sys
 from DataFormats.FWLite import Events, Handle
 ROOT.gROOT.SetBatch()
+from argparse import ArgumentParser
 
-events = Events('validate_ctag_pat.root')
-jet_labels = ["selectedPatJets"]#, "selectedPatJetsAK4PF", "selectedPatJetsAK8PFCHSSoftDropSubjets"]
+parser = ArgumentParser()
+parser.add_argument('file')
+parser.add_argument('collections', default=['slimmedJets'], nargs='*')
+args = parser.parse_args()
+
+events = Events(args.file)
+jet_labels = args.collections
 tested_discriminators = ['pfCombinedCvsLJetTags', 'pfCombinedCvsBJetTags']
 
-evt = events.__iter__().next()
+evt = next(events.__iter__())
 handle = Handle('std::vector<pat::Jet>')
 for label in jet_labels:
    evt.getByLabel(label, handle)

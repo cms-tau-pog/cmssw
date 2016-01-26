@@ -80,7 +80,7 @@ class BetterConfigParser(ConfigParser.ConfigParser):
                 for option in self.options( "local"+section.title() ):
                     result[option] = self.get( "local"+section.title(),
                                                    option )
-        except ConfigParser.NoSectionError, section:
+        except ConfigParser.NoSectionError as section:
             msg = ("%s in configuration files. This section is mandatory."
                    %(str(section).replace(":", "", 1)))
             raise AllInOneError(msg)
@@ -91,7 +91,7 @@ class BetterConfigParser(ConfigParser.ConfigParser):
         for option in demandPars:
             try:
                 result[option] = self.get( section, option )
-            except ConfigParser.NoOptionError, globalSectionError:
+            except ConfigParser.NoOptionError as globalSectionError:
                 globalSection = str( globalSectionError ).split( "'" )[-2]
                 splittedSectionName = section.split( ":" )
                 if len( splittedSectionName ) > 1:
@@ -102,7 +102,7 @@ class BetterConfigParser(ConfigParser.ConfigParser):
                 if self.has_section( localSection ):
                     try:
                         result[option] = self.get( localSection, option )
-                    except ConfigParser.NoOptionError, option:
+                    except ConfigParser.NoOptionError as option:
                         msg = ("%s. This option is mandatory."
                                %(str(option).replace(":", "", 1).replace(
                                     "section",
@@ -128,7 +128,9 @@ class BetterConfigParser(ConfigParser.ConfigParser):
         for section in self.sections():
             if "compare:" in section:
                 self.checkInput(section,
-                                knownSimpleOptions = ["levels", "dbOutput",
+                                knownSimpleOptions = ["levels", "dbOutput","moduleList","modulesToPlot","useDefaultRange",
+                                                      "dx_min","dx_max","dy_min","dy_max","dz_min","dz_max","dr_min","dr_max","rdphi_min","rdphi_max",
+                                                      "dalpha_min","dalpha_max","dbeta_min","dbeta_max","dgamma_min","dgamma_max",
                                                       "jobmode", "3DSubdetector1", "3Dubdetector2", "3DTranslationalScaleFactor"])
                 levels = self.get( section, "levels" )
                 dbOutput = self.get( section, "dbOutput" )

@@ -64,9 +64,7 @@ cond::service::PoolDBOutputService::PoolDBOutputService(const edm::ParameterSet 
   connection.setParameters( connectionPset );
   connection.configure();
   std::string connectionString = iConfig.getParameter<std::string>("connect");
-  BackendType backType = (BackendType) iConfig.getUntrackedParameter<int>("dbFormat", DEFAULT_DB );
-  if( backType == UNKNOWN_DB )  backType = DEFAULT_DB;
-  m_session = connection.createSession( connectionString, true, backType ); 
+  m_session = connection.createSession( connectionString, true ); 
   
   if( iConfig.exists("logconnect") ){
     m_logConnectionString = iConfig.getUntrackedParameter<std::string>("logconnect");
@@ -121,15 +119,14 @@ cond::service::PoolDBOutputService::isNewTagRequest( const std::string& recordNa
 }
 
 void 
-cond::service::PoolDBOutputService::initDB( bool forReading )
+cond::service::PoolDBOutputService::initDB( bool )
 {
   std::lock_guard<std::recursive_mutex> lock(m_mutex);
-  m_session.transaction().start(false);
   cond::persistency::TransactionScope scope( m_session.transaction() );
+  scope.start( false );
   try{ 
-    if(!forReading) {
-      if( !m_session.existsDatabase() ) m_session.createDatabase();
-    }
+    if( !m_session.existsDatabase() ) m_session.createDatabase();
+
     //init logdb if required
     if(!m_logConnectionString.empty()){
       m_logdb->connect( m_logConnectionString );
@@ -182,8 +179,15 @@ cond::service::PoolDBOutputService::preGlobalBeginLumi(edm::GlobalContext const&
 }
 
 cond::service::PoolDBOutputService::~PoolDBOutputService(){
+  if( m_dbstarted) {
+    m_session.transaction().rollback();
+  }
 }
 
+void cond::service::PoolDBOutputService::forceInit(){
+  std::lock_guard<std::recursive_mutex> lock(m_mutex);
+    if (!m_dbstarted) initDB();  
+}
 
 cond::Time_t 
 cond::service::PoolDBOutputService::endOfTime() const{
@@ -329,7 +333,7 @@ cond::service::PoolDBOutputService::appendSinceTime( const std::string& payloadI
 cond::service::PoolDBOutputService::Record& 
 cond::service::PoolDBOutputService::lookUpRecord(const std::string& recordName){
   std::lock_guard<std::recursive_mutex> lock(m_mutex);
-  if (!m_dbstarted) this->initDB( false );
+  if (!m_dbstarted) this->initDB();
   cond::persistency::TransactionScope scope( m_session.transaction() );
   std::map<std::string,Record>::iterator it=m_callbacks.find(recordName);
   if(it==m_callbacks.end()) {
