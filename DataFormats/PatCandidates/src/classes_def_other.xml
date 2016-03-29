@@ -69,6 +69,20 @@
   <class name="edm::Wrapper<vid::CutFlowResult>"/>
   <class name="edm::Wrapper<edm::ValueMap<vid::CutFlowResult> >"/>
   <class name="pat::UserHolder<vid::CutFlowResult>"/>
+  
+  <class name="pat::PATTauDiscriminatorBase">
+  	<field name="transientVector_" transient="true"/>
+  </class>
+  
+  <class name="pat::PATTauDiscriminator" ClassVersion="9">
+  	<version ClassVersion="9" checksum="2916098408"/>
+  	 <!-- <field name="transientVector_" transient="true"/> -->
+  	 <!-- <field name="fixed_" transient="true"/> -->
+  </class>
+  <class name="pat::PATTauDiscriminatorRef"/>
+  <class name="pat::PATTauDiscriminatorRefProd"/>
+  <class name="pat::PATTauDiscriminatorRefVector"/>
+  <class name="edm::Wrapper<pat::PATTauDiscriminator>"/>
 
   </selection>
  <exclusion>

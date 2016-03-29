@@ -38,6 +38,7 @@ namespace pat {
   class Tau;
   typedef std::vector<Tau>              TauCollection; 
   typedef edm::Ref<TauCollection>       TauRef; 
+  typedef edm::RefProd<TauCollection>	TauRefProd;
   typedef edm::RefVector<TauCollection> TauRefVector; 
 }
 
@@ -325,6 +326,18 @@ namespace pat {
       const reco::VertexRef& secondaryVertex() const { return pfEssential().sv_; }
       const pat::tau::TauPFEssential::Point& secondaryVertexPos() const { return pfEssential().svPos_; }
       const pat::tau::TauPFEssential::CovMatrix& secondaryVertexCov() const { return pfEssential().svCov_; }
+      float ip3d() const { return pfEssential().ip3d_; }
+      float ip3d_error() const { return pfEssential().ip3d_error_; }
+      float ip3d_Sig() const;
+
+      /// ---- Information for MVA isolation ----
+      /// Needed to recompute MVA isolation on MiniAOD
+      /// return sum of ecal energies from signal candidates
+      float ecalEnergy() const { return pfEssential().ecalEnergy_; }
+      /// return sum of hcal energies from signal candidates
+      float hcalEnergy() const { return pfEssential().hcalEnergy_; }
+      /// return normalized chi2 of leading track
+      float leadingTrackNormChi2() const { return pfEssential().leadingTrackNormChi2_; }
 
       /// Methods copied from reco::Jet.
       /// (accessible from reco::CaloTau/reco::PFTau via reco::CaloTauTagInfo/reco::PFTauTagInfo)

@@ -45,6 +45,9 @@
 #include "DataFormats/TauReco/interface/CaloTau.h"
 #include "DataFormats/TauReco/interface/CaloTauDiscriminator.h"
 
+#include "DataFormats/PatCandidates/interface/Tau.h"
+#include "DataFormats/PatCandidates/interface/PATTauDiscriminator.h"
+
 template<class TauType, class TauDiscriminator>
 class TauDiscriminationProducerBase : public edm::stream::EDProducer<> {
   public:
@@ -110,6 +113,8 @@ typedef TauDiscriminationProducerBase<reco::PFTau, reco::PFTauDiscriminator>
   PFTauDiscriminationProducerBase;
 typedef TauDiscriminationProducerBase<reco::CaloTau, reco::CaloTauDiscriminator>
   CaloTauDiscriminationProducerBase;
+typedef TauDiscriminationProducerBase<pat::Tau, pat::PATTauDiscriminator>
+  PATTauDiscriminationProducerBase;
 
 /// helper function retrieve the correct cfi getter string (ie PFTauProducer)
 //for this tau type
@@ -118,6 +123,6 @@ template<class TauType> std::string getProducerString()
   // this generic one shoudl never be called.
   // these are specialized in TauDiscriminationProducerBase.cc
   throw cms::Exception("TauDiscriminationProducerBase")
-      << "Unsupported TauType used.  You must use either PFTau or CaloTaus.";
+      << "Unsupported TauType used.  You must use either PFTau, CaloTaus, or PATTau.";
 }
 #endif

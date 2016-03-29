@@ -26,5 +26,6 @@
   <use   name="RecoMET/METAlgorithms"/>
   <use   name="RecoEgamma/EgammaTools"/>
   <use   name="TrackingTools/IPTools"/>
+  <use   name="RecoTauTag/RecoTau"/>
   <use   name="root"/>
 </library>
