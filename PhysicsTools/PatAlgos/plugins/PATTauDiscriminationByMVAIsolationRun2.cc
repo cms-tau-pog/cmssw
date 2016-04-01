@@ -10,8 +10,12 @@
  * \author Alexander Nehrkorn, RWTH Aachen
  */
 
-// todo 1: remove leadingTrackChi2 as input variable (also from TauPFEssential)
-// todo 2: do we need to add PATTauIDEmbedder?
+// todo 1: remove leadingTrackChi2 as input variable from:
+//           - here
+//           - TauPFEssential
+//           - PFRecoTauDiscriminationByMVAIsolationRun2
+//           - Training of BDT
+// todo 2: do we need/want to add PATTauIDEmbedder?
 
 #include "RecoTauTag/RecoTau/interface/TauDiscriminationProducerBase.h"
 
@@ -102,6 +106,8 @@ class PATTauDiscriminationByMVAIsolationRun2 : public PATTauDiscriminationProduc
 			      mvaOpt_ == kPWoldDMwLT || mvaOpt_ == kPWnewDMwLT) mvaInput_ = new float[23];
 		    else assert(0);
 		    
+		    requireDecayMode_ = cfg.exists("requireDecayMode") ? cfg.getParameter<bool>("requireDecayMode") : false;
+
 		    chargedIsoPtSum_ = cfg.getParameter<std::string>("srcChargedIsoPtSum");
 		    neutralIsoPtSum_ = cfg.getParameter<std::string>("srcNeutralIsoPtSum");
 		    puCorrPtSum_ = cfg.getParameter<std::string>("srcPUcorrPtSum");
@@ -141,6 +147,7 @@ class PATTauDiscriminationByMVAIsolationRun2 : public PATTauDiscriminationProduc
 		enum { kOldDMwoLT, kOldDMwLT, kNewDMwoLT, kNewDMwLT, kDBoldDMwLT, kDBnewDMwLT, kPWoldDMwLT, kPWnewDMwLT };
 		int mvaOpt_;
 		float* mvaInput_;
+		bool requireDecayMode_;
 		
 		edm::Handle<TauCollection> taus_;
 		std::auto_ptr<PATTauDiscriminator> category_output_;
@@ -179,6 +186,8 @@ double PATTauDiscriminationByMVAIsolationRun2::discriminate(const TauRef& tau) c
 	// CV: computation of MVA value requires presence of leading charged hadron
 	if ( tau->leadChargedHadrCand().isNull() ) return 0.;
 	
+	if ( requireDecayMode_ && tau->tauID("decayModeFindingNewDMs") < 0.5 ) return 0.;
+
 	int tauDecayMode = tau->decayMode();
 	
 	if ( ((mvaOpt_ == kOldDMwoLT || mvaOpt_ == kOldDMwLT || mvaOpt_ == kDBoldDMwLT || mvaOpt_ == kPWoldDMwLT) && (tauDecayMode == 0 || tauDecayMode == 1 || tauDecayMode == 2 || tauDecayMode == 10)) ||
@@ -195,11 +204,14 @@ double PATTauDiscriminationByMVAIsolationRun2::discriminate(const TauRef& tau) c
 		float decayDistZ = tau->flightLength().z();
 		float decayDistMag = std::sqrt(decayDistX*decayDistX + decayDistY*decayDistY + decayDistZ*decayDistZ);
 		
+		// --- The following 5 variables differ slightly between AOD & MiniAOD
+		//     because they are recomputed using packedCandidates saved in the tau
 		float nPhoton = float(tau_n_photons_total(*tau));
 		float ptWeightedDetaStrip = tau_pt_weighted_deta_strip(*tau, tauDecayMode);
 		float ptWeightedDphiStrip = tau_pt_weighted_dphi_strip(*tau, tauDecayMode);
 		float ptWeightedDrSignal = tau_pt_weighted_dr_signal(*tau, tauDecayMode);
 		float ptWeightedDrIsolation = tau_pt_weighted_dr_iso(*tau, tauDecayMode);
+		// ---
 		float leadingTrackChi2 = tau->leadingTrackNormChi2();
 		float eRatio = tau_Eratio(*tau);
 		

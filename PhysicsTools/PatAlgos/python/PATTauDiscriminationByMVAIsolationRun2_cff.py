@@ -1,19 +1,17 @@
 import FWCore.ParameterSet.Config as cms
 
+from RecoTauTag.RecoTau.TauDiscriminatorTools import noPrediscriminants
 from PhysicsTools.PatAlgos.PATTauDiscriminantCutMultiplexer_cfi import *
 
 discriminationByIsolationMVArun2v1raw = cms.EDProducer("PATTauDiscriminationByMVAIsolationRun2",
 
     # tau collection to discriminate
     PATTauProducer = cms.InputTag('pfTauProducer'),
-
-    # Require leading pion ensures that:
-    #  1) these is at least one track above threshold (0.5 GeV) in the signal cone
-    #  2) a track OR a pi-zero in the signal cone has pT > 5 GeV
-    Prediscriminants = requireLeadTrack,
+    Prediscriminants = noPrediscriminants,
     loadMVAfromDB = cms.bool(True),
     mvaName = cms.string("tauIdMVAnewDMwLT"),
     mvaOpt = cms.string("newDMwLT"),
+    requireDecayMode = cms.bool(True),
     
     srcChargedIsoPtSum = cms.string('chargedIsoPtSum'),
     srcNeutralIsoPtSum = cms.string('neutralIsoPtSum'),
@@ -24,7 +22,7 @@ discriminationByIsolationMVArun2v1raw = cms.EDProducer("PATTauDiscriminationByMV
 
 discriminationByIsolationMVArun2v1VLoose = patTauDiscriminantCutMultiplexer.clone(
     PATTauProducer = cms.InputTag('pfTauProducer'),    
-    Prediscriminants = requireLeadTrack,
+    Prediscriminants = noPrediscriminants,
     toMultiplex = cms.InputTag('discriminationByIsolationMVArun2v1raw'),
     key = cms.InputTag('discriminationByIsolationMVArun2v1raw:category'),
     loadMVAfromDB = cms.bool(True),

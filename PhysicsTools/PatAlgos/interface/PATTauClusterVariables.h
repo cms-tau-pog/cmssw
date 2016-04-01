@@ -38,10 +38,6 @@ namespace
 	    return false;
 	}
 	
-	//todo: does this need to be implemented?
-	//float tau_leadTrackChi2(const pat::Tau& tau){
-	//}
-	
 	float tau_Eratio(const pat::Tau& tau){
 		float EcalEnInSignalCands = tau.ecalEnergy();
 		float HcalEnInSignalCands = tau.hcalEnergy();

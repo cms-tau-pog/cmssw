@@ -378,13 +378,13 @@ void PATTauProducer::produce(edm::Event & iEvent, const edm::EventSetup & iSetup
       // aTauPFEssential.pvPos_ = tauLifetimeInfo.primaryVertexPos();
       // aTauPFEssential.pvCov_ = tauLifetimeInfo.primaryVertexCov();
       aTauPFEssential.hasSV_ = tauLifetimeInfo.hasSecondaryVertex();
-      if(tauLifetimeInfo.hasSecondaryVertex()){
+//      if(tauLifetimeInfo.hasSecondaryVertex()){
 	aTauPFEssential.flightLength_ = tauLifetimeInfo.flightLength();
 	aTauPFEssential.flightLengthSig_ = tauLifetimeInfo.flightLengthSig();
 	//      aTauPFEssential.sv_ = tauLifetimeInfo.secondaryVertex();
 	// aTauPFEssential.svPos_ = tauLifetimeInfo.secondaryVertexPos();
 	// aTauPFEssential.svCov_ = tauLifetimeInfo.secondaryVertexCov();
-      }
+//      }
       aTauPFEssential.ip3d_ = tauLifetimeInfo.ip3d();
       aTauPFEssential.ip3d_error_ = tauLifetimeInfo.ip3d_error();
     }
