@@ -83,12 +83,12 @@ namespace
 
     for (auto& cand : cands) {
       // only look at electrons/photons with pT > 0.5
-      if (cand->pt() < 0.5)
+      if ((float)cand->pt() < 0.5)
         continue;
 
-      float dr = reco::deltaR(*cand, tau);
-      float deta = std::abs(cand->eta() - tau.eta());
-      float dphi = std::abs(reco::deltaPhi(cand->phi(), tau.phi()));
+      float dr = reco::deltaR((float)cand->eta(),(float)cand->phi(),(float)tau.eta(),(float)tau.phi());
+      float deta = std::abs((float)cand->eta() - (float)tau.eta());
+      float dphi = std::abs(reco::deltaPhi((float)cand->phi(), (float)tau.phi()));
       float pt = cand->pt();
 
       bool flag = isInside(pt, deta, dphi);
@@ -150,11 +150,11 @@ namespace
   unsigned int tau_n_photons_total(const reco::PFTau& tau) {
     unsigned int n_photons = 0;
     for (auto& cand : tau.signalPFGammaCands()) {
-      if (cand->pt() > 0.5)
+      if ((float)cand->pt() > 0.5)
         ++n_photons;
     }
     for (auto& cand : tau.isolationPFGammaCands()) {
-      if (cand->pt() > 0.5)
+      if ((float)cand->pt() > 0.5)
         ++n_photons;
     }
     return n_photons;
