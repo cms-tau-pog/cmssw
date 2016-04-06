@@ -31,7 +31,7 @@
 #include "DataFormats/PatCandidates/interface/Tau.h"
 #include "DataFormats/PatCandidates/interface/PATTauDiscriminator.h"
 #include "DataFormats/Math/interface/deltaR.h"
-#include "PhysicsTools/PatAlgos/interface/PATTauClusterVariables.h"
+#include "RecoTauTag/RecoTau/interface/PATTauClusterVariables.h"
 
 #include "CondFormats/EgammaObjects/interface/GBRForest.h"
 #include "CondFormats/DataRecord/interface/GBRWrapperRcd.h"

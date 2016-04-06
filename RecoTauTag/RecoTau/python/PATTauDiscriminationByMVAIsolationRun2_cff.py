@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 from RecoTauTag.RecoTau.TauDiscriminatorTools import noPrediscriminants
-from PhysicsTools.PatAlgos.PATTauDiscriminantCutMultiplexer_cfi import *
+from RecoTauTag.RecoTau.PATTauDiscriminantCutMultiplexer_cfi import *
 
 # make sure to load the database containing the mva inputs before using the producers below
 # e.g. process.load('RecoTauTag.Configuration.loadRecoTauTagMVAsFromPrepDB_cfi') as in
