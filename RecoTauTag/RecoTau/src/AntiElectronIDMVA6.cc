@@ -24,8 +24,7 @@ AntiElectronIDMVA6::AntiElectronIDMVA6(const edm::ParameterSet& cfg)
     mva_NoEleMatch_wGwoGSF_EC_(0),
     mva_woGwGSF_EC_(0),
     mva_wGwGSF_EC_(0)   
-{   
-  loadMVAfromDB_ = cfg.exists("loadMVAfromDB") ? cfg.getParameter<bool>("loadMVAfromDB"): false;
+{ loadMVAfromDB_ = cfg.exists("loadMVAfromDB") ? cfg.getParameter<bool>("loadMVAfromDB"): false;
   if ( !loadMVAfromDB_ ) {
     if(cfg.exists("inputFileName")){
       inputFileName_ = cfg.getParameter<edm::FileInPath>("inputFileName");
@@ -895,25 +894,10 @@ double AntiElectronIDMVA6::MVAValue(const pat::Tau& theTau,
   
   float TauLeadChargedPFCandEtaAtEcalEntrance = theTau.etaAtEcalEntranceLeadChargedCand();
   float TauLeadChargedPFCandPt = theTau.ptLeadChargedCand();
-  
-  /*float TauLeadChargedPFCandPt = -99.;
-  
-  const reco::CandidatePtrVector signalCands = theTau.signalCands();
-    for (unsigned int o = 0; o < signalCands.size(); o++ ) {
-      
-       pat::PackedCandidate const*  signalCand = dynamic_cast<pat::PackedCandidate const*> (signalCands[o].get());
-       const reco::Track & track = signalCand->pseudoTrack();
-   
-	if ( track.pt() > TauLeadChargedPFCandPt ) {
-	   TauLeadChargedPFCandPt = track.pt();
-	}
-       
-    }*/
-    
 
   Float_t TauPt = theTau.pt();
-  Float_t TauEmFraction = std::max(theTau.ecalEnergy()/(theTau.ecalEnergy()+theTau.hcalEnergy()), (Float_t)0.);
-  //Float_t TauEmFraction = std::max(theTau.emFraction_AC(), (Float_t)0.);
+  //Float_t TauEmFraction = std::max(theTau.ecalEnergy()/(theTau.ecalEnergy()+theTau.hcalEnergy()), (Float_t)0.);
+  Float_t TauEmFraction = std::max(theTau.emFraction_MVA(), (Float_t)0.);
   Float_t TauLeadPFChargedHadrHoP = 0.;
   Float_t TauLeadPFChargedHadrEoP = 0.;
   if ( theTau.leadChargedHadrCand()->p() > 0. ) {
@@ -1094,23 +1078,10 @@ double AntiElectronIDMVA6::MVAValue(const pat::Tau& theTau)
   
   float TauLeadChargedPFCandEtaAtEcalEntrance = theTau.etaAtEcalEntranceLeadChargedCand();
   float TauLeadChargedPFCandPt = theTau.ptLeadChargedCand();
-  /*float TauLeadChargedPFCandPt = -99.;
-  
-  const reco::CandidatePtrVector signalCands = theTau.signalCands();
-    for (unsigned int o = 0; o < signalCands.size(); o++ ) {
-      
-       pat::PackedCandidate const*  signalCand = dynamic_cast<pat::PackedCandidate const*> (signalCands[o].get());
-       const reco::Track & track = signalCand->pseudoTrack();
-   
-	if ( track.pt() > TauLeadChargedPFCandPt ) {
-	   TauLeadChargedPFCandPt = track.pt();
-	}
-       
-    }*/
 
   Float_t TauPt = theTau.pt();
-  Float_t TauEmFraction = std::max(theTau.ecalEnergy()/(theTau.ecalEnergy()+theTau.hcalEnergy()), (Float_t)0.);
-  //Float_t TauEmFraction = std::max(theTau.emFraction_AC(), (Float_t)0.);
+  //Float_t TauEmFraction = std::max(theTau.ecalEnergy()/(theTau.ecalEnergy()+theTau.hcalEnergy()), (Float_t)0.);
+  Float_t TauEmFraction = std::max(theTau.emFraction_MVA(), (Float_t)0.);
   Float_t TauLeadPFChargedHadrHoP = 0.;
   Float_t TauLeadPFChargedHadrEoP = 0.;
   if ( theTau.leadChargedHadrCand()->p() > 0. ) {
