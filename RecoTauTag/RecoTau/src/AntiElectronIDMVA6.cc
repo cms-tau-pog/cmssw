@@ -24,8 +24,7 @@ AntiElectronIDMVA6::AntiElectronIDMVA6(const edm::ParameterSet& cfg)
     mva_NoEleMatch_wGwoGSF_EC_(0),
     mva_woGwGSF_EC_(0),
     mva_wGwGSF_EC_(0)   
-{
-   
+{   
   loadMVAfromDB_ = cfg.exists("loadMVAfromDB") ? cfg.getParameter<bool>("loadMVAfromDB"): false;
   if ( !loadMVAfromDB_ ) {
     if(cfg.exists("inputFileName")){
