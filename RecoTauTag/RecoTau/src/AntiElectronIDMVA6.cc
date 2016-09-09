@@ -25,8 +25,6 @@ AntiElectronIDMVA6::AntiElectronIDMVA6(const edm::ParameterSet& cfg)
     mva_woGwGSF_EC_(0),
     mva_wGwGSF_EC_(0)   
 {
-
-   std::cout << "cfg.exists " <<cfg.exists("loadMVAfromDB")<< std::endl;
    
   loadMVAfromDB_ = cfg.exists("loadMVAfromDB") ? cfg.getParameter<bool>("loadMVAfromDB"): false;
   if ( !loadMVAfromDB_ ) {
