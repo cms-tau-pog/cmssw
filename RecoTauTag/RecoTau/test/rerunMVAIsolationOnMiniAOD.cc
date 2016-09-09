@@ -38,6 +38,8 @@
 #include "DataFormats/TauReco/interface/PFTauTransverseImpactParameterAssociation.h"
 
 #include "RecoTauTag/RecoTau/interface/PFRecoTauClusterVariables.h"
+#include "RecoTauTag/RecoTau/interface/AntiElectronIDMVA6.h"
+
 
 #include "TFile.h"
 #include "TH1D.h"
@@ -81,6 +83,8 @@ class rerunMVAIsolationOnMiniAOD : public edm::one::EDAnalyzer<edm::one::SharedR
       edm::EDGetTokenT<pat::PATTauDiscriminator> mvaIsolationTightToken_;
       edm::EDGetTokenT<pat::PATTauDiscriminator> mvaIsolationVTightToken_;
       edm::EDGetTokenT<pat::PATTauDiscriminator> mvaIsolationVVTightToken_;
+      edm::EDGetTokenT<pat::PATTauDiscriminator> mvaEleRawToken_;
+	
       edm::EDGetTokenT<reco::PFTauCollection> pfTauToken_;
       edm::EDGetTokenT<reco::PFTauDiscriminator> dmfNewToken_;
       edm::EDGetTokenT<reco::PFTauDiscriminator> chargedIsoPtSumToken_;
@@ -88,8 +92,10 @@ class rerunMVAIsolationOnMiniAOD : public edm::one::EDAnalyzer<edm::one::SharedR
       edm::EDGetTokenT<reco::PFTauDiscriminator> puCorrPtSumToken_;
       edm::EDGetTokenT<reco::PFTauDiscriminator> photonPtSumOutsideSignalConeToken_;
       edm::EDGetTokenT<reco::PFTauDiscriminator> footprintCorrectionToken_;
+      edm::EDGetTokenT<reco::PFTauDiscriminator> rawElecMVA6Token_; 
       edm::EDGetTokenT<PFTauTIPAssociationByRef> tauTIPToken_;
-
+      
+      
       TH1D* mvaValueAOD;
       TH1D* mvaValueMiniAOD;
       TH1D* mvaValueDiff;
@@ -135,7 +141,9 @@ class rerunMVAIsolationOnMiniAOD : public edm::one::EDAnalyzer<edm::one::SharedR
       TH2D* ptWeightedDrSignal;
       TH2D* ptWeightedDrIsolation;
       TH2D* leadTrackChi2;
-      TH2D* eRatio;
+      TH2D* eRatio; 
+      
+      TH2D* mvaValue_antiEMVA6;
 };
 
 //
@@ -165,6 +173,8 @@ rerunMVAIsolationOnMiniAOD::rerunMVAIsolationOnMiniAOD(const edm::ParameterSet& 
    mvaIsolationTightToken_ = consumes<pat::PATTauDiscriminator>(edm::InputTag("rerunDiscriminationByIsolationMVArun2v1Tight","","rerunMVAIsolationOnMiniAOD"));
    mvaIsolationVTightToken_ = consumes<pat::PATTauDiscriminator>(edm::InputTag("rerunDiscriminationByIsolationMVArun2v1VTight","","rerunMVAIsolationOnMiniAOD"));
    mvaIsolationVVTightToken_ = consumes<pat::PATTauDiscriminator>(edm::InputTag("rerunDiscriminationByIsolationMVArun2v1VVTight","","rerunMVAIsolationOnMiniAOD"));
+   mvaEleRawToken_ = consumes<pat::PATTauDiscriminator>(edm::InputTag("rerunDiscriminationAgainstElectronMVA6","","rerunMVAIsolationOnMiniAOD"));
+   
    pfTauToken_ = consumes<reco::PFTauCollection>(edm::InputTag("hpsPFTauProducer","","PAT"));
    dmfNewToken_ = consumes<reco::PFTauDiscriminator>(edm::InputTag("hpsPFTauDiscriminationByDecayModeFindingNewDMs","","PAT"));
    chargedIsoPtSumToken_ = consumes<reco::PFTauDiscriminator>(edm::InputTag("hpsPFTauChargedIsoPtSum","","PAT"));
@@ -172,8 +182,10 @@ rerunMVAIsolationOnMiniAOD::rerunMVAIsolationOnMiniAOD(const edm::ParameterSet& 
    puCorrPtSumToken_ = consumes<reco::PFTauDiscriminator>(edm::InputTag("hpsPFTauPUcorrPtSum","","PAT"));
    photonPtSumOutsideSignalConeToken_ = consumes<reco::PFTauDiscriminator>(edm::InputTag("hpsPFTauPhotonPtSumOutsideSignalCone","","PAT"));
    footprintCorrectionToken_ = consumes<reco::PFTauDiscriminator>(edm::InputTag("hpsPFTauFootprintCorrection","","PAT"));
+   rawElecMVA6Token_    = consumes<reco::PFTauDiscriminator>(edm::InputTag("hpsPFTauDiscriminationagainstElectronMVA6Raw","","RECO"));
    tauTIPToken_ = consumes<PFTauTIPAssociationByRef>(edm::InputTag("hpsPFTauTransverseImpactParameters","","PAT"));
-
+   
+  
    verbosity_ = iConfig.getParameter<int>("verbosity");
    additionalCollectionsAvailable_ = iConfig.getParameter<bool>("additionalCollectionsAvailable");
 
@@ -223,6 +235,8 @@ rerunMVAIsolationOnMiniAOD::rerunMVAIsolationOnMiniAOD(const edm::ParameterSet& 
    ptWeightedDrIsolation = new TH2D("ptWeightedDrIsolation",";ptWeightedDrIsolation (AOD);ptWeightedDrIsolation (MiniAOD)",50,0,0.5,50,0,0.5);
    leadTrackChi2 = new TH2D("leadTrackChi2",";leadTrackChi2 (AOD);leadTrackChi2 (MiniAOD)",1000,0,100,1000,0,100);
    eRatio = new TH2D("eRatio",";eRatio (AOD);eRatio (MiniAOD)",200,0,2,200,0,2);
+   
+   mvaValue_antiEMVA6 = new TH2D("mvaValue_antiEMVA6",";AOD;MiniAOD",220,-1.1,1.1,220,-1.1,1.1);
 }
 
 
@@ -267,7 +281,13 @@ rerunMVAIsolationOnMiniAOD::analyze(const edm::Event& iEvent, const edm::EventSe
 
 	edm::Handle<pat::PATTauDiscriminator> mvaIsoVVTight;
 	iEvent.getByToken(mvaIsolationVVTightToken_,mvaIsoVVTight);
-
+	
+        edm::Handle<reco::PFTauDiscriminator> rawElecMVA6;
+	iEvent.getByToken(rawElecMVA6Token_,rawElecMVA6);
+       
+        edm::Handle<pat::PATTauDiscriminator> mvaEleRaw;
+	iEvent.getByToken(mvaEleRawToken_,mvaEleRaw);
+	
 	std::vector<pat::TauRef> unmatchedTaus;
 
 	for(unsigned iTau = 0; iTau < taus->size(); iTau++)
@@ -288,6 +308,8 @@ rerunMVAIsolationOnMiniAOD::analyze(const edm::Event& iEvent, const edm::EventSe
 		mvaValue_vvTight->Fill(tau->tauID("byVVTightIsolationMVArun2v1DBoldDMwLT"),(*mvaIsoVVTight)[tau]);
 
 		mvaValueDiff->Fill(fabs(valueAOD - valueMiniAOD));
+                
+		mvaValue_antiEMVA6->Fill((*mvaEleRaw)[tau] , taus->at(iTau).tauID("againstElectronMVA6Raw"));
 
 		if(valueAOD != valueMiniAOD)
 			unmatchedTaus.push_back(tau);
