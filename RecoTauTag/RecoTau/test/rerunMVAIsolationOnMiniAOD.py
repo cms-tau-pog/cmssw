@@ -52,6 +52,32 @@ process.rerunDiscriminationByIsolationMVArun2v1VLoose = patDiscriminationByIsola
     )
 )
 
+process.rerunDiscriminationByIsolationMVArun2v1Loose = process.rerunDiscriminationByIsolationMVArun2v1VLoose.clone()
+process.rerunDiscriminationByIsolationMVArun2v1Loose.mapping[0].cut = cms.string("RecoTauTag_tauIdMVADBoldDMwLTv1_WPEff80")
+process.rerunDiscriminationByIsolationMVArun2v1Medium = process.rerunDiscriminationByIsolationMVArun2v1VLoose.clone()
+process.rerunDiscriminationByIsolationMVArun2v1Medium.mapping[0].cut = cms.string("RecoTauTag_tauIdMVADBoldDMwLTv1_WPEff70")
+process.rerunDiscriminationByIsolationMVArun2v1Tight = process.rerunDiscriminationByIsolationMVArun2v1VLoose.clone()
+process.rerunDiscriminationByIsolationMVArun2v1Tight.mapping[0].cut = cms.string("RecoTauTag_tauIdMVADBoldDMwLTv1_WPEff60")
+process.rerunDiscriminationByIsolationMVArun2v1VTight = process.rerunDiscriminationByIsolationMVArun2v1VLoose.clone()
+process.rerunDiscriminationByIsolationMVArun2v1VTight.mapping[0].cut = cms.string("RecoTauTag_tauIdMVADBoldDMwLTv1_WPEff50")
+process.rerunDiscriminationByIsolationMVArun2v1VVTight = process.rerunDiscriminationByIsolationMVArun2v1VLoose.clone()
+process.rerunDiscriminationByIsolationMVArun2v1VVTight.mapping[0].cut = cms.string("RecoTauTag_tauIdMVADBoldDMwLTv1_WPEff40")
+
+process.rerunMvaIsolation2SeqRun2 = cms.Sequence(
+   process.rerunDiscriminationByIsolationMVArun2v1raw
+   *process.rerunDiscriminationByIsolationMVArun2v1VLoose
+   *process.rerunDiscriminationByIsolationMVArun2v1Loose
+   *process.rerunDiscriminationByIsolationMVArun2v1Medium
+   *process.rerunDiscriminationByIsolationMVArun2v1Tight
+   *process.rerunDiscriminationByIsolationMVArun2v1VTight
+   *process.rerunDiscriminationByIsolationMVArun2v1VVTight
+)
+
+process.rerunMVAIsolationOnMiniAOD = cms.EDAnalyzer('rerunMVAIsolationOnMiniAOD'
+)
+process.rerunMVAIsolationOnMiniAOD.verbosity = cms.int32(0)
+process.rerunMVAIsolationOnMiniAOD.additionalCollectionsAvailable = cms.bool(True)
+
 process.rerunDiscriminationAgainstElectronMVA6 = patTauDiscriminationAgainstElectronMVA6.clone(
     PATTauProducer = cms.InputTag('slimmedTaus'),
     Prediscriminants = noPrediscriminants,
@@ -78,31 +104,4 @@ process.rerunDiscriminationAgainstElectronMVA6 = patTauDiscriminationAgainstElec
     srcElectrons = cms.InputTag('slimmedElectrons')
 )
 
-process.rerunDiscriminationByIsolationMVArun2v1Loose = process.rerunDiscriminationByIsolationMVArun2v1VLoose.clone()
-process.rerunDiscriminationByIsolationMVArun2v1Loose.mapping[0].cut = cms.string("RecoTauTag_tauIdMVADBoldDMwLTv1_WPEff80")
-process.rerunDiscriminationByIsolationMVArun2v1Medium = process.rerunDiscriminationByIsolationMVArun2v1VLoose.clone()
-process.rerunDiscriminationByIsolationMVArun2v1Medium.mapping[0].cut = cms.string("RecoTauTag_tauIdMVADBoldDMwLTv1_WPEff70")
-process.rerunDiscriminationByIsolationMVArun2v1Tight = process.rerunDiscriminationByIsolationMVArun2v1VLoose.clone()
-process.rerunDiscriminationByIsolationMVArun2v1Tight.mapping[0].cut = cms.string("RecoTauTag_tauIdMVADBoldDMwLTv1_WPEff60")
-process.rerunDiscriminationByIsolationMVArun2v1VTight = process.rerunDiscriminationByIsolationMVArun2v1VLoose.clone()
-process.rerunDiscriminationByIsolationMVArun2v1VTight.mapping[0].cut = cms.string("RecoTauTag_tauIdMVADBoldDMwLTv1_WPEff50")
-process.rerunDiscriminationByIsolationMVArun2v1VVTight = process.rerunDiscriminationByIsolationMVArun2v1VLoose.clone()
-process.rerunDiscriminationByIsolationMVArun2v1VVTight.mapping[0].cut = cms.string("RecoTauTag_tauIdMVADBoldDMwLTv1_WPEff40")
-
-process.rerunMvaIsolation2SeqRun2 = cms.Sequence(
-   process.rerunDiscriminationByIsolationMVArun2v1raw
-   *process.rerunDiscriminationByIsolationMVArun2v1VLoose
-   *process.rerunDiscriminationByIsolationMVArun2v1Loose
-   *process.rerunDiscriminationByIsolationMVArun2v1Medium
-   *process.rerunDiscriminationByIsolationMVArun2v1Tight
-   *process.rerunDiscriminationByIsolationMVArun2v1VTight
-   *process.rerunDiscriminationByIsolationMVArun2v1VVTight
-)
-
-process.rerunMVAIsolationOnMiniAOD = cms.EDAnalyzer('rerunMVAIsolationOnMiniAOD'
-)
-
-process.rerunMVAIsolationOnMiniAOD.verbosity = cms.int32(0)
-process.rerunMVAIsolationOnMiniAOD.additionalCollectionsAvailable = cms.bool(True)
-
-process.p = cms.Path(process.rerunMvaIsolation2SeqRun2*process.rerunMVAIsolationOnMiniAOD*process.rerunDiscriminationAgainstElectronMVA6)
+process.p = cms.Path(process.rerunMvaIsolation2SeqRun2*process.rerunDiscriminationAgainstElectronMVA6*process.rerunMVAIsolationOnMiniAOD)
