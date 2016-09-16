@@ -968,9 +968,7 @@ double AntiElectronIDMVA6::MVAValue(const pat::Tau& theTau,
 
   Float_t TauPhi = theTau.phi();
  
-  if ( theTau.phiAtEcalEntrance() != -99. ) {
-    TauPhi = theTau.phiAtEcalEntrance();
-  }
+  
   Float_t TaudCrackPhi = dCrackPhi(TauPhi, TauEtaAtEcalEntrance);
   Float_t TaudCrackEta = dCrackEta(TauEtaAtEcalEntrance); 
   
@@ -1152,9 +1150,6 @@ double AntiElectronIDMVA6::MVAValue(const pat::Tau& theTau)
 
   Float_t TauPhi = theTau.phi();
  
-  if ( theTau.phiAtEcalEntrance() != -99. ) {
-    TauPhi = theTau.phiAtEcalEntrance();
-  }
   Float_t TaudCrackPhi = dCrackPhi(TauPhi, TauEtaAtEcalEntrance);
   Float_t TaudCrackEta = dCrackEta(TauEtaAtEcalEntrance); 
   
