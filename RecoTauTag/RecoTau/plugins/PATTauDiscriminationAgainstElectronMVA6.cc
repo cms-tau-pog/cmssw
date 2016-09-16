@@ -99,19 +99,6 @@ double PATTauDiscriminationAgainstElectronMVA6::discriminate(const TauRef& theTa
   
   float leadChargedPFCandEtaAtEcalEntrance = theTauRef->etaAtEcalEntranceLeadChargedCand();
   
-  //float leadChargedPFCandPt = theTauRef->ptLeadChargedCand();
-    
-  /* const reco::CandidatePtrVector signalCands = theTauRef->signalCands();
-    for (unsigned int o = 0; o < signalCands.size(); o++ ) {
-      
-       pat::PackedCandidate const*  signalCand = dynamic_cast<pat::PackedCandidate const*> (signalCands[o].get());
-       const reco::Track & track = signalCand->pseudoTrack();
-   
-	if ( track.pt() > leadChargedPFCandPt ) {
-	   leadChargedPFCandPt = track.pt();
-	}      
-    }*/
-    
     
   if( (*theTauRef).leadChargedHadrCand().isNonnull()) {
 
