@@ -589,6 +589,8 @@ rerunMVAIsolationOnMiniAOD::endJob()
 	ptWeightedDrIsolation->Write();
 	leadTrackChi2->Write();
 	eRatio->Write();
+	
+	mvaValue_antiEMVA6->Write();
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
