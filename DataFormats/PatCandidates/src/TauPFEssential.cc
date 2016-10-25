@@ -15,6 +15,7 @@ pat::tau::TauPFEssential::TauPFEssential(const reco::PFTau& tau) :
     hcalEnergy_(0.),
     leadingTrackNormChi2_(1.e+3),
     etaAtEcalEntrance_(0.),
+    phiAtEcalEntrance_(0.),
     ecalEnergyLeadChargedHadrCand_(0.),
     hcalEnergyLeadChargedHadrCand_(0.),
     etaAtEcalEntranceLeadChargedCand_(0.),

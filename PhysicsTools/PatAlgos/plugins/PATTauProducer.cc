@@ -359,7 +359,6 @@ void PATTauProducer::produce(edm::Event & iEvent, const edm::EventSetup & iSetup
     }
 
     // extraction of variables needed to rerun MVA isolation and ant-electron discriminator on MiniAOD
-    // (only available for PFTaus)
     if( aTau.isPFTau() ) {
       edm::Handle<reco::PFTauCollection> pfTaus;
       iEvent.getByToken(pfTauToken_, pfTaus);
@@ -368,6 +367,7 @@ void PATTauProducer::produce(edm::Event & iEvent, const edm::EventSetup & iSetup
       float ecalEnergy = 0;
       float hcalEnergy = 0;
       float sumEtaTimesEnergy = 0.;
+      float sumPhiTimesEnergy = 0.;
       float sumEnergy = 0.;
       float leadChargedCandPt = -99;
       float leadChargedCandEtaAtEcalEntrance = -99;	
@@ -377,6 +377,7 @@ void PATTauProducer::produce(edm::Event & iEvent, const edm::EventSetup & iSetup
         ecalEnergy += icand->ecalEnergy();
         hcalEnergy += icand->hcalEnergy();		
 	sumEtaTimesEnergy += icand->positionAtECALEntrance().eta()*icand->energy();
+	sumPhiTimesEnergy += icand->positionAtECALEntrance().phi()*icand->energy();
         sumEnergy += icand->energy();	 
 	const reco::Track* track = 0;
      	if ( icand->trackRef().isNonnull() ) track = icand->trackRef().get();
@@ -397,9 +398,11 @@ void PATTauProducer::produce(edm::Event & iEvent, const edm::EventSetup & iSetup
       aTauPFEssential.etaAtEcalEntranceLeadChargedCand_ = leadChargedCandEtaAtEcalEntrance;
       if (sumEnergy != 0.) {
         aTauPFEssential.etaAtEcalEntrance_ = sumEtaTimesEnergy/sumEnergy;
+	aTauPFEssential.phiAtEcalEntrance_ = sumPhiTimesEnergy/sumEnergy;
       }
       else {
         aTauPFEssential.etaAtEcalEntrance_ = -99.;
+	aTauPFEssential.phiAtEcalEntrance_ = -99.;
       }	
       float leadingTrackNormChi2 = 0;
       float ecalEnergyLeadChargedHadrCand = -99.;
