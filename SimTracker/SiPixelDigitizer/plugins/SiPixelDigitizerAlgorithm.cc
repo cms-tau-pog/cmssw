@@ -142,7 +142,7 @@ void SiPixelDigitizerAlgorithm::init(const edm::EventSetup& es) {
     SiPixelTemplate2D::pushfile(*dbobject_den, templateStores_);
     SiPixelTemplate2D::pushfile(*dbobject_num, templateStores_);
     
-    track.reserve(6);
+    track.resize(6);
   }
 }
 
@@ -1312,12 +1312,10 @@ void SiPixelDigitizerAlgorithm::induce_signal(std::vector<PSimHit>::const_iterat
           hit_signal[chan] += ChargeFraction;
 	} // endif
 
-
+#ifdef TP_DEBUG
 	mp = MeasurementPoint( float(ix), float(iy) );
 	LocalPoint lp = topol->localPosition(mp);
 	chan = topol->channel(lp);
-
-#ifdef TP_DEBUG
 	LogDebug ("Pixel Digitizer")
 	  << " pixel " << ix << " " << iy << " - "<<" "
 	  << chan << " " << ChargeFraction<<" "
@@ -2345,6 +2343,7 @@ int SiPixelDigitizerAlgorithm::PixelTempRewgt2D(int id_in, int id_rewgt, array_2
   array_2d clust(cluster);
 
   // Take the pixel dimensions from the 2D template
+  templ2D.getid(id_in);
   xsize = templ2D.xsize();
   ysize = templ2D.ysize();
   
@@ -2369,7 +2368,7 @@ int SiPixelDigitizerAlgorithm::PixelTempRewgt2D(int id_in, int id_rewgt, array_2
   } else {
     xhit2D = track[0] - cotalpha*track[2] + 0.5f*xsize;
   }
-  
+
   // Zero the input and output templates
   for(i=0; i<BYM2; ++i) {
     for(j=0; j<BXM2; ++j) {
