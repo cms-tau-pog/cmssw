@@ -63,7 +63,7 @@ btagWeightTable = cms.EDProducer("BTagSFProducer",
     discNames = cms.vstring(
         "pfCombinedInclusiveSecondaryVertexV2BJetTags",
         "pfDeepCSVJetTags:probb+pfDeepCSVJetTags:probbb",       #if multiple MiniAOD branches need to be summed up (e.g., DeepCSV b+bb), separate them using '+' delimiter
-        "pfCombinedMVAV2BJetTags"        
+        "pfCombinedMVAV2BJetTags"
     ),
     discShortNames = cms.vstring(
         "CSVV2",
@@ -72,7 +72,7 @@ btagWeightTable = cms.EDProducer("BTagSFProducer",
     ),
     weightFiles = cms.vstring(                                  #default settings are for 2017 94X. toModify function is called later for other eras.
         btagSFdir+"CSVv2_94XSF_V2_B_F.csv",
-        btagSFdir+"DeepCSV_94XSF_V2_B_F.csv",                    
+        btagSFdir+"DeepCSV_94XSF_V2_B_F.csv",
         "unavailable"                                           #if SFs for an algorithm in an era is unavailable, the corresponding branch will not be stored
     ),
     operatingPoints = cms.vstring("3","3","3"),                 #loose = 0, medium = 1, tight = 2, reshaping = 3
@@ -83,22 +83,22 @@ btagWeightTable = cms.EDProducer("BTagSFProducer",
 )
 
 for modifier in run2_miniAOD_80XLegacy, run2_nanoAOD_94X2016: # to be updated when SF for Summer16MiniAODv3 MC will be available
-    modifier.toModify(btagWeightTable,                
+    modifier.toModify(btagWeightTable,
         cut = cms.string("pt > 25. && abs(eta) < 2.4"),             #80X corresponds to 2016, |eta| < 2.4
         weightFiles = cms.vstring(                                  #80X corresponds to 2016 SFs
-            btagSFdir+"CSVv2_Moriond17_B_H.csv",            
-            "unavailable",                    
-            btagSFdir+"cMVAv2_Moriond17_B_H.csv"                                            
+            btagSFdir+"CSVv2_Moriond17_B_H.csv",
+            "unavailable",
+            btagSFdir+"cMVAv2_Moriond17_B_H.csv"
         )
     )
 
 run2_nanoAOD_92X.toModify(btagWeightTable,                      #92X corresponds to MCv1, for which SFs are unavailable
     weightFiles = cms.vstring(
         "unavailable",
-        "unavailable",                    
-        "unavailable"                                            
+        "unavailable",
+        "unavailable"
     )
-)                    
+)
 
 genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
     genEvent = cms.InputTag("generator"),
@@ -114,20 +114,20 @@ genWeightsTable = cms.EDProducer("GenWeightsTableProducer",
     namedWeightIDs = cms.vstring(),
     namedWeightLabels = cms.vstring(),
     lheWeightPrecision = cms.int32(14),
-    maxPdfWeights = cms.uint32(150), 
+    maxPdfWeights = cms.uint32(150),
     debug = cms.untracked.bool(False),
 )
 lheInfoTable = cms.EDProducer("LHETablesProducer",
     lheInfo = cms.InputTag("externalLHEProducer"),
     precision = cms.int32(14),
-    storeLHEParticles = cms.bool(True) 
+    storeLHEParticles = cms.bool(True)
 )
 
 l1bits=cms.EDProducer("L1TriggerResultsConverter", src=cms.InputTag("gtStage2Digis"), legacyL1=cms.bool(False))
 
 nanoSequenceCommon = cms.Sequence(
         nanoMetadata + jetSequence + muonSequence + tauSequence + electronSequence+photonSequence+vertexSequence+
-        isoTrackSequence + # must be after all the leptons 
+        isoTrackSequence + # must be after all the leptons
         linkedObjects  +
         jetTables + muonTables + tauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + isoTrackTables
         )
@@ -144,6 +144,17 @@ nanoSequenceMC.insert(nanoSequenceFS.index(nanoSequenceCommon)+1,nanoSequenceOnl
 for modifier in run2_nanoAOD_94XMiniAODv1, run2_nanoAOD_94XMiniAODv2, run2_nanoAOD_102Xv1:
     modifier.toModify(extraFlagsTable, variables= cms.PSet())
     modifier.toModify(extraFlagsTable, variables = dict(Flag_ecalBadCalibFilterV2 = ExtVar(cms.InputTag("ecalBadCalibFilterNanoTagger"), bool, doc = "Bad ECAL calib flag (updated xtal list)")))
+
+# Add new tau IDs using runTauIdMVA tool
+import RecoTauTag.RecoTau.tools.runTauIdMVA as tauIdConfig
+def nanoAOD_addTauIds(process):
+    updatedTauName = "slimmedTausUpdated"
+    tauIdEmbedder = tauIdConfig.TauIDEmbedder(process, cms, debug = False, updatedTauName = updatedTauName,
+            toKeep = [ "2017v2", "newDM2017v2", "dR0p32017v2", "deepTau2017v2", "againstEle2018" ])
+    tauIdEmbedder.runTauID()
+    process.nanoSequenceCommon.insert(process.nanoSequenceCommon.index(tauSequence),
+            cms.Sequence(process.rerunMvaIsolationSequence + getattr(process, updatedTauName)))
+    return process
 
 from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
 def nanoAOD_addDeepInfo(process,addDeepBTag,addDeepFlavour):
@@ -268,6 +279,8 @@ def nanoAOD_customizeCommon(process):
                                      addDeepBTag=nanoAOD_addDeepInfoAK8_switch.nanoAOD_addDeepBTag_switch,
                                      addDeepBoostedJet=nanoAOD_addDeepInfoAK8_switch.nanoAOD_addDeepBoostedJet_switch,
                                      jecPayload=nanoAOD_addDeepInfoAK8_switch.jecPayload)
+
+    process = nanoAOD_addTauIds(process)
     return process
 
 def nanoAOD_customizeData(process):
@@ -286,7 +299,7 @@ def nanoAOD_customizeMC(process):
 
 ### Era dependent customization
 _80x_sequence = nanoSequenceCommon.copy()
-#remove stuff 
+#remove stuff
 _80x_sequence.remove(isoTrackTables)
 _80x_sequence.remove(isoTrackSequence)
 #add stuff
