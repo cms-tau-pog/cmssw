@@ -1,0 +1,37 @@
+<use name="boost"/>
+<use name="CommonTools/UtilAlgos"/>
+<use name="FWCore/Framework"/>
+<use name="CondFormats/JetMETObjects"/>
+<use name="CondFormats/DataRecord"/>
+<use name="JetMETCorrections/Modules"/>
+<use name="JetMETCorrections/Algorithms"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+<use name="JetMETCorrections/Objects"/>
+<use name="PhysicsTools/PatUtils"/>
+<use name="PhysicsTools/PatExamples"/>
+<use name="PhysicsTools/PatAlgos"/>
+<use name="SimDataFormats/JetMatching"/>
+<use name="DataFormats/PatCandidates"/>
+<use name="DataFormats/Candidate"/>
+<use name="AnalysisDataFormats/TopObjects"/>
+<use name="RecoVertex/KalmanVertexFit"/>
+<use name="RecoBTag/SecondaryVertex"/> 
+
+<use   name="DataFormats/Math"/>
+<use   name="DataFormats/TauReco"/>
+<use   name="DataFormats/MuonReco"/>
+<use   name="FWCore/MessageLogger"/>
+<use   name="PhysicsTools/IsolationUtils"/>
+<use   name="PhysicsTools/MVAComputer"/>
+<use   name="TrackingTools/GeomPropagators"/>
+<use   name="TrackingTools/TransientTrack"/>
+<use   name="RecoVertex/VertexPrimitives"/>
+<use   name="DataFormats/HepMCCandidate"/>
+<use   name="PhysicsTools/JetMCUtils"/>
+<use   name="root"/>
+
+<use name="RecoVertex/PrimaryVertexProducer"/>
+
+<flags EDM_PLUGIN="1"/>
+

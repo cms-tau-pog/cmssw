@@ -1,0 +1,5 @@
+<lcgdict>
+ <class name="lowPtTau"/>
+ <class name="std::vector<lowPtTau>"/>
+ <class name="edm::Wrapper<std::vector<lowPtTau> >"/>
+</lcgdict>
