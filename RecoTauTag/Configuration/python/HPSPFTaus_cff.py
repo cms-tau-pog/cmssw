@@ -306,14 +306,18 @@ hpsPFTauDiscriminationByMVA6rawElectronRejection = pfRecoTauDiscriminationAgains
     Prediscriminants = requireDecayMode.clone(),
     loadMVAfromDB = cms.bool(True),
     vetoEcalCracks = cms.bool(False),
-    mvaName_NoEleMatch_woGwoGSF_BL = cms.string("RecoTauTag_antiElectronMVA_NoEleMatch_woGwoGSF_BL"),
-    mvaName_NoEleMatch_wGwoGSF_BL = cms.string("RecoTauTag_antiElectronMVA_NoEleMatch_wGwoGSF_BL"),
-    mvaName_woGwGSF_BL = cms.string("RecoTauTag_antiElectronMVA_woGwGSF_BL"),
-    mvaName_wGwGSF_BL = cms.string("RecoTauTag_antiElectronMVA_wGwGSF_BL"),
-    mvaName_NoEleMatch_woGwoGSF_EC = cms.string("RecoTauTag_antiElectronMVA_NoEleMatch_woGwoGSF_EC"),
-    mvaName_NoEleMatch_wGwoGSF_EC = cms.string("RecoTauTag_antiElectronMVA_NoEleMatch_wGwoGSF_EC"),
-    mvaName_woGwGSF_EC = cms.string("RecoTauTag_antiElectronMVA_woGwGSF_EC"),
-    mvaName_wGwGSF_EC = cms.string("RecoTauTag_antiElectronMVA_wGwGSF_EC")
+    mvaName_NoEleMatch_woGwoGSF_BL = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_woGwoGSF_BL"),
+    mvaName_NoEleMatch_wGwoGSF_BL = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_wGwoGSF_BL"),
+    mvaName_woGwGSF_BL = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_woGwGSF_BL"),
+    mvaName_wGwGSF_BL = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_wGwGSF_BL"),
+    mvaName_NoEleMatch_woGwoGSF_EC = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_woGwoGSF_FWEC"),
+    mvaName_NoEleMatch_wGwoGSF_EC = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_wGwoGSF_FWEC"),
+    mvaName_woGwGSF_EC = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_woGwGSF_FWEC"),
+    mvaName_wGwGSF_EC = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_wGwGSF_FWEC"),
+    mvaName_NoEleMatch_woGwoGSF_VFEC = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_woGwoGSF_VFWEC"),
+    mvaName_NoEleMatch_wGwoGSF_VFEC = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_wGwoGSF_VFWEC"),
+    mvaName_woGwGSF_VFEC = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_woGwGSF_VFWEC"),
+    mvaName_wGwGSF_VFEC = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_wGwGSF_VFWEC")
 )
 ## ByMVA6VLooseElectronRejection
 hpsPFTauDiscriminationByMVA6VLooseElectronRejection = recoTauDiscriminantCutMultiplexer.clone(
@@ -325,42 +329,62 @@ hpsPFTauDiscriminationByMVA6VLooseElectronRejection = recoTauDiscriminantCutMult
     mapping = cms.VPSet(
         cms.PSet(
             category = cms.uint32(0), # minMVANoEleMatchWOgWOgsfBL
-            cut = cms.string("RecoTauTag_antiElectronMVA_NoEleMatch_woGwoGSF_BL_VLoose"),
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_woGwoGSF_BL_WPEff98"),
             variable = cms.string("pt")
         ),
         cms.PSet(
             category = cms.uint32(2), # minMVANoEleMatchWgWOgsfBL
-            cut = cms.string("RecoTauTag_antiElectronMVA_NoEleMatch_wGwoGSF_BL_VLoose"),
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_wGwoGSF_BL_WPEff98"),
             variable = cms.string("pt")
         ),
         cms.PSet(
             category = cms.uint32(5), # minMVAWOgWgsfBL
-            cut = cms.string("RecoTauTag_antiElectronMVA_woGwGSF_BL_VLoose"),
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_woGwGSF_BL_WPEff98"),
             variable = cms.string("pt")
         ),
         cms.PSet(
             category = cms.uint32(7), # minMVAWgWgsfBL
-            cut = cms.string("RecoTauTag_antiElectronMVA_wGwGSF_BL_VLoose"),
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_wGwGSF_BL_WPEff98"),
             variable = cms.string("pt")
         ),
         cms.PSet(
             category = cms.uint32(8), # minMVANoEleMatchWOgWOgsfEC
-            cut = cms.string("RecoTauTag_antiElectronMVA_NoEleMatch_woGwoGSF_EC_VLoose"),
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_woGwoGSF_FWEC_WPEff98"),
+            variable = cms.string("pt")
+        ),
+        cms.PSet(
+            category = cms.uint32(9), # minMVANoEleMatchWOgWOgsfVFEC
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_woGwoGSF_VFWEC_WPEff98"),
             variable = cms.string("pt")
         ),
         cms.PSet(
             category = cms.uint32(10), # minMVANoEleMatchWgWOgsfEC
-            cut = cms.string("RecoTauTag_antiElectronMVA_NoEleMatch_wGwoGSF_EC_VLoose"),
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_wGwoGSF_FWEC_WPEff98"),
+            variable = cms.string("pt")
+        ),
+        cms.PSet(
+            category = cms.uint32(11), # minMVANoEleMatchWgWOgsfVFEC
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_NoEleMatch_wGwoGSF_VFWEC_WPEff98"),
             variable = cms.string("pt")
         ),
         cms.PSet(
             category = cms.uint32(13), # minMVAWOgWgsfEC
-            cut = cms.string("RecoTauTag_antiElectronMVA_woGwGSF_EC_VLoose"),
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_woGwGSF_FWEC_WPEff98"),
+            variable = cms.string("pt")
+        ),
+        cms.PSet(
+            category = cms.uint32(14), # minMVAWOgWgsfVFEC
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_woGwGSF_VFWEC_WPEff98"),
             variable = cms.string("pt")
         ),
         cms.PSet(
             category = cms.uint32(15), # minMVAWgWgsfEC
-            cut = cms.string("RecoTauTag_antiElectronMVA_wGwGSF_EC_VLoose"),
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_wGwGSF_FWEC_WPEff98"),
+            variable = cms.string("pt")
+        ),
+        cms.PSet(
+            category = cms.uint32(16), # minMVAWgWgsfVFEC
+            cut = cms.string("RecoTauTag_antiElectronPhase2MVA6v1_gbr_wGwGSF_VFWEC_WPEff98"),
             variable = cms.string("pt")
         )
     )
@@ -368,19 +392,19 @@ hpsPFTauDiscriminationByMVA6VLooseElectronRejection = recoTauDiscriminantCutMult
 ## ByMVA6LooseElectronRejection
 hpsPFTauDiscriminationByMVA6LooseElectronRejection = copy.deepcopy(hpsPFTauDiscriminationByMVA6VLooseElectronRejection)
 for m in hpsPFTauDiscriminationByMVA6LooseElectronRejection.mapping:
-    m.cut = m.cut.value().replace("VLoose", "Loose")
+    m.cut = m.cut.value().replace("Eff98", "Eff90")
 ## ByMVA6VMediumElectronRejection
 hpsPFTauDiscriminationByMVA6MediumElectronRejection = copy.deepcopy(hpsPFTauDiscriminationByMVA6VLooseElectronRejection)
 for m in hpsPFTauDiscriminationByMVA6MediumElectronRejection.mapping:
-    m.cut = m.cut.value().replace("VLoose", "Medium")
+    m.cut = m.cut.value().replace("Eff98", "Eff80")
 ## ByMVA6TightElectronRejection
 hpsPFTauDiscriminationByMVA6TightElectronRejection = copy.deepcopy(hpsPFTauDiscriminationByMVA6VLooseElectronRejection)
 for m in hpsPFTauDiscriminationByMVA6TightElectronRejection.mapping:
-    m.cut = m.cut.value().replace("VLoose", "Tight")
+    m.cut = m.cut.value().replace("Eff98", "Eff70")
 ## ByMVA6VTightElectronRejection
 hpsPFTauDiscriminationByMVA6VTightElectronRejection = copy.deepcopy(hpsPFTauDiscriminationByMVA6VLooseElectronRejection)
 for m in hpsPFTauDiscriminationByMVA6VTightElectronRejection.mapping:
-    m.cut = m.cut.value().replace("VLoose", "VTight")
+    m.cut = m.cut.value().replace("Eff98", "Eff60")
 
 # Define the HPS selection discriminator used in cleaning
 hpsSelectionDiscriminator.PFTauProducer = cms.InputTag("combinatoricRecoTaus")

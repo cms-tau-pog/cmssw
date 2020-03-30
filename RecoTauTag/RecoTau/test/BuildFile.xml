@@ -2,7 +2,7 @@
   <use   name="RecoTauTag/RecoTau"/>
   <use   name="cppunit"/>
 </bin>
-<library name="rerunMVAIsolationOnMiniAOD" file="rerunMVAIsolationOnMiniAOD.cc">
+<library name="rerunAntiePhase2MVAnOnMiniAOD" file="rerunAntiePhase2MVAnOnMiniAOD.cc">
   <use name="FWCore/Framework"/>
   <use name="FWCore/PluginManager"/>
   <use name="FWCore/ParameterSet"/>

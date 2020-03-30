@@ -2,6 +2,8 @@ import FWCore.ParameterSet.Config as cms
 
 from RecoTauTag.RecoTau.TauDiscriminatorTools import requireLeadTrack
 
+from RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi import dEdX
+
 pfRecoTauDiscriminationAgainstElectronMVA6 = cms.EDProducer("PFRecoTauDiscriminationAgainstElectronMVA6",
 
     # tau collection to discriminate
@@ -20,10 +22,14 @@ pfRecoTauDiscriminationAgainstElectronMVA6 = cms.EDProducer("PFRecoTauDiscrimina
     mvaName_NoEleMatch_wGwoGSF_BL = cms.string("gbr_NoEleMatch_wGwoGSF_BL"),
     mvaName_woGwGSF_BL = cms.string("gbr_woGwGSF_BL"),
     mvaName_wGwGSF_BL = cms.string("gbr_wGwGSF_BL"),
-    mvaName_NoEleMatch_woGwoGSF_EC = cms.string("gbr_NoEleMatch_woGwoGSF_EC"),
-    mvaName_NoEleMatch_wGwoGSF_EC = cms.string("gbr_NoEleMatch_wGwoGSF_EC"),
-    mvaName_woGwGSF_EC = cms.string("gbr_woGwGSF_EC"),
-    mvaName_wGwGSF_EC = cms.string("gbr_wGwGSF_EC"),
+    mvaName_NoEleMatch_woGwoGSF_EC = cms.string("gbr_NoEleMatch_woGwoGSF_FWEC"),
+    mvaName_NoEleMatch_wGwoGSF_EC = cms.string("gbr_NoEleMatch_wGwoGSF_FWEC"),
+    mvaName_woGwGSF_EC = cms.string("gbr_woGwGSF_FWEC"),
+    mvaName_wGwGSF_EC = cms.string("gbr_wGwGSF_FWEC"),
+    mvaName_NoEleMatch_woGwoGSF_VFEC = cms.string("gbr_NoEleMatch_woGwoGSF_VFWEC"),
+    mvaName_NoEleMatch_wGwoGSF_VFEC = cms.string("gbr_NoEleMatch_wGwoGSF_VFWEC"),
+    mvaName_woGwGSF_VFEC = cms.string("gbr_woGwGSF_VFWEC"),
+    mvaName_wGwGSF_VFEC = cms.string("gbr_wGwGSF_VFWEC"),
 
     minMVANoEleMatchWOgWOgsfBL = cms.double(0.0),
     minMVANoEleMatchWgWOgsfBL  = cms.double(0.0),
@@ -33,9 +39,22 @@ pfRecoTauDiscriminationAgainstElectronMVA6 = cms.EDProducer("PFRecoTauDiscrimina
     minMVANoEleMatchWgWOgsfEC  = cms.double(0.0),
     minMVAWOgWgsfEC            = cms.double(0.0),
     minMVAWgWgsfEC             = cms.double(0.0),
+    minMVANoEleMatchWOgWOgsfVFEC = cms.double(0.0),
+    minMVANoEleMatchWgWOgsfVFEC  = cms.double(0.0),
+    minMVAWOgWgsfVFEC            = cms.double(0.0),
+    minMVAWgWgsfVFEC             = cms.double(0.0),
 
-    srcGsfElectrons = cms.InputTag('gedGsfElectrons'),
+    srcGsfElectrons = cms.InputTag('ecalDrivenGsfElectronsFromMultiCl'),
     vetoEcalCracks = cms.bool(True),
-    usePhiAtEcalEntranceExtrapolation = cms.bool(False),
-    verbosity = cms.int32(0)
+    verbosity = cms.int32(0),
+
+    #for HGCalEgammaIDHelper
+    EERecHits    = cms.InputTag('HGCalRecHit:HGCEERecHits'),
+    FHRecHits    = cms.InputTag('HGCalRecHit:HGCHEFRecHits'),
+    BHRecHits    = cms.InputTag('HGCalRecHit:HGCHEBRecHits'),
+    dEdXWeights  = dEdX.weights,
+    pcaRadius    = cms.double(3.0),
+    isoNRings    = cms.uint32(5),
+    isoDeltaR    = cms.double(0.15),
+    isoDeltaRmin = cms.double(0.0)
 )

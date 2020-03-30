@@ -29,7 +29,6 @@ public:
   explicit PATTauDiscriminationAgainstElectronMVA6(const edm::ParameterSet& cfg)
       : PATTauDiscriminationProducerBase(cfg), mva_(), category_output_() {
     mva_ = std::make_unique<AntiElectronIDMVA6>(cfg);
-
     srcElectrons = cfg.getParameter<edm::InputTag>("srcElectrons");
     electronToken = consumes<pat::ElectronCollection>(srcElectrons);
     vetoEcalCracks_ = cfg.getParameter<bool>("vetoEcalCracks");
@@ -68,6 +67,7 @@ private:
 };
 
 void PATTauDiscriminationAgainstElectronMVA6::beginEvent(const edm::Event& evt, const edm::EventSetup& es) {
+  
   mva_->beginEvent(evt, es);
 
   evt.getByToken(Tau_token, taus_);
@@ -77,32 +77,56 @@ void PATTauDiscriminationAgainstElectronMVA6::beginEvent(const edm::Event& evt, 
 }
 
 double PATTauDiscriminationAgainstElectronMVA6::discriminate(const TauRef& theTauRef) const {
+  
   double mvaValue = 1.;
   double category = -1.;
   bool isGsfElectronMatched = false;
+  
   float deltaRDummy = 9.9;
+  
   const float ECALBarrelEndcapEtaBorder = 1.479;
+  const float ECALEndcapEtaBorder = 2.4;
+ 
   float tauEtaAtEcalEntrance = theTauRef->etaAtEcalEntrance();
   float leadChargedPFCandEtaAtEcalEntrance = theTauRef->etaAtEcalEntranceLeadChargedCand();
-
+  
+   
   if ((*theTauRef).leadChargedHadrCand().isNonnull()) {
     int numSignalPFGammaCandsInSigCone = 0;
     const reco::CandidatePtrVector signalGammaCands = theTauRef->signalGammaCands();
     for (const auto& gamma : signalGammaCands) {
       double dR = deltaR(gamma->p4(), theTauRef->leadChargedHadrCand()->p4());
-      double signalrad = std::max(0.05, std::min(0.10, 3.0 / std::max(1.0, theTauRef->pt())));
+      double signalrad = std::max(0.05, std::min(0.10, 3.0 / std::max(0.0, theTauRef->pt())));
       // gammas inside the tau signal cone
       if (dR < signalrad) {
         numSignalPFGammaCandsInSigCone += 1;
       }
     }
+    
+   
     // loop over the electrons
-    for (const auto& theElectron : *Electrons) {
+    int matchedElectronIdx = -1;
+    int nEle = Electrons->size();
+    
+     for (int ie = 0; ie < nEle; ie++) {
+       const pat::Electron& theElectron = Electrons->at(ie);
+      
       if (theElectron.pt() > 10.) {  // CV: only take electrons above some minimal energy/Pt into account...
+       
         double deltaREleTau = deltaR(theElectron.p4(), theTauRef->p4());
-        deltaRDummy = deltaREleTau;
-        if (deltaREleTau < 0.3) {
-          double mva_match = mva_->MVAValue(*theTauRef, theElectron);
+        deltaRDummy = deltaREleTau; 
+	
+        if (deltaREleTau < 0.2 && 
+	   (matchedElectronIdx == -1 || 
+	   (matchedElectronIdx > -1 && theElectron.pt() > Electrons->at(matchedElectronIdx).pt())) ) 
+	    matchedElectronIdx = ie;
+	
+      }
+     }
+      
+        if (matchedElectronIdx != -1) {
+	  const pat::Electron& theElectron = Electrons->at(matchedElectronIdx);
+	  double mva_match = mva_->MVAValue(*theTauRef, theElectron);
           bool hasGsfTrack = false;
           pat::PackedCandidate const* packedLeadTauCand =
               dynamic_cast<pat::PackedCandidate const*>(theTauRef->leadChargedHadrCand().get());
@@ -126,21 +150,30 @@ double PATTauDiscriminationAgainstElectronMVA6::discriminate(const TauRef& theTa
             } else if (numSignalPFGammaCandsInSigCone >= 1 && hasGsfTrack) {
               category = 7.;
             }
-          } else {  // Endcap
+          } else if ( std::abs(tauEtaAtEcalEntrance) > ECALBarrelEndcapEtaBorder && 
+	              std::abs(tauEtaAtEcalEntrance) < ECALEndcapEtaBorder) {  // Endcap
             if (numSignalPFGammaCandsInSigCone == 0 && hasGsfTrack) {
               category = 13.;
             } else if (numSignalPFGammaCandsInSigCone >= 1 && hasGsfTrack) {
               category = 15.;
-            }
+            } 
           }
+	  else if ( std::abs(tauEtaAtEcalEntrance) > ECALEndcapEtaBorder) { 
+	    if (numSignalPFGammaCandsInSigCone == 0 && hasGsfTrack) {
+              category = 14.;
+            } else if (numSignalPFGammaCandsInSigCone >= 1 && hasGsfTrack) {
+              category = 16.;
+            }       
+          }
+		      
           mvaValue = std::min(mvaValue, mva_match);
           isGsfElectronMatched = true;
-        }  // deltaR < 0.3
-      }    // electron pt > 10
-    }      // end of loop over electrons
-
+    }// electron found
+    
+   
     if (!isGsfElectronMatched) {
       mvaValue = mva_->MVAValue(*theTauRef);
+      
       bool hasGsfTrack = false;
       pat::PackedCandidate const* packedLeadTauCand =
           dynamic_cast<pat::PackedCandidate const*>(theTauRef->leadChargedHadrCand().get());
@@ -162,11 +195,18 @@ double PATTauDiscriminationAgainstElectronMVA6::discriminate(const TauRef& theTa
         } else if (numSignalPFGammaCandsInSigCone >= 1 && !hasGsfTrack) {
           category = 2.;
         }
-      } else {  // Endcap
+      } else if (std::abs(tauEtaAtEcalEntrance) > ECALBarrelEndcapEtaBorder &&
+                 std::abs(tauEtaAtEcalEntrance) < ECALEndcapEtaBorder) {  // Endcap
         if (numSignalPFGammaCandsInSigCone == 0 && !hasGsfTrack) {
           category = 8.;
         } else if (numSignalPFGammaCandsInSigCone >= 1 && !hasGsfTrack) {
           category = 10.;
+        }
+      } else if (std::abs(tauEtaAtEcalEntrance) > ECALEndcapEtaBorder) { //VFEndcap
+        if (numSignalPFGammaCandsInSigCone == 0 && !hasGsfTrack) {
+          category = 9.;
+        } else if (numSignalPFGammaCandsInSigCone >= 1 && !hasGsfTrack) {
+          category = 11.;
         }
       }
     }
@@ -211,6 +251,7 @@ void PATTauDiscriminationAgainstElectronMVA6::fillDescriptions(edm::Configuratio
   desc.add<std::string>("mvaName_woGwGSF_BL", "gbr_woGwGSF_BL");
   desc.add<bool>("returnMVA", true);
   desc.add<bool>("loadMVAfromDB", true);
+  desc.addOptional<edm::FileInPath>("inputFileName");
   {
     edm::ParameterSetDescription psd0;
     psd0.add<std::string>("BooleanOperator", "and");
@@ -234,6 +275,14 @@ void PATTauDiscriminationAgainstElectronMVA6::fillDescriptions(edm::Configuratio
   desc.add<std::string>("method", "BDTG");
   desc.add<std::string>("mvaName_NoEleMatch_woGwoGSF_EC", "gbr_NoEleMatch_woGwoGSF_EC");
   desc.add<double>("minMVANoEleMatchWgWOgsfEC", 0.0);
+  desc.add<std::string>("mvaName_wGwGSF_VFEC", "gbr_wGwGSF_VFEC");
+  desc.add<std::string>("mvaName_woGwGSF_VFEC", "gbr_woGwGSF_VFEC");
+  desc.add<double>("minMVAWOgWgsfVFEC", 0.0);
+  desc.add<double>("minMVAWgWgsfVFEC", 0.0);
+  desc.add<std::string>("mvaName_NoEleMatch_wGwoGSF_VFEC", "gbr_NoEleMatch_wGwoGSF_VFEC");
+  desc.add<std::string>("mvaName_NoEleMatch_woGwoGSF_VFEC", "gbr_NoEleMatch_woGwoGSF_VFEC");
+  desc.add<double>("minMVANoEleMatchWgWOgsfVFEC", 0.0);
+  desc.add<double>("minMVANoEleMatchWOgWOgsfVFEC", 0.0);
   descriptions.add("patTauDiscriminationAgainstElectronMVA6", desc);
 }
 

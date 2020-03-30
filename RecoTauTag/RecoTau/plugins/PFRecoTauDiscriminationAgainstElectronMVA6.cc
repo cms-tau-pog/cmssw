@@ -21,6 +21,8 @@
 #include "DataFormats/TauReco/interface/PFTauDiscriminator.h"
 #include "DataFormats/Math/interface/deltaR.h"
 
+#include "RecoEgamma/EgammaTools/interface/HGCalEgammaIDHelper.h"
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -41,6 +43,9 @@ public:
 
     // add category index
     produces<PFTauDiscriminator>("category");
+    
+    eIDHelper_.reset(new HGCalEgammaIDHelper(cfg, consumesCollector()));
+    radius_ = cfg.getParameter<double>("pcaRadius");
   }
 
   void beginEvent(const edm::Event&, const edm::EventSetup&) override;
@@ -69,6 +74,9 @@ private:
   bool vetoEcalCracks_;
 
   int verbosity_;
+  
+  std::unique_ptr<HGCalEgammaIDHelper> eIDHelper_;
+  float radius_;
 };
 
 void PFRecoTauDiscriminationAgainstElectronMVA6::beginEvent(const edm::Event& evt, const edm::EventSetup& es) {
@@ -78,6 +86,7 @@ void PFRecoTauDiscriminationAgainstElectronMVA6::beginEvent(const edm::Event& ev
   category_output_.reset(new PFTauDiscriminator(TauRefProd(taus_)));
 
   evt.getByToken(GsfElectrons_token, gsfElectrons_);
+  eIDHelper_->eventInit(evt,es);
 }
 
 double PFRecoTauDiscriminationAgainstElectronMVA6::discriminate(const PFTauRef& thePFTauRef) const {
@@ -88,6 +97,8 @@ double PFRecoTauDiscriminationAgainstElectronMVA6::discriminate(const PFTauRef& 
   float deltaRDummy = 9.9;
 
   const float ECALBarrelEndcapEtaBorder = 1.479;
+  const float ECALEndcapEtaBorder = 2.4;
+  
   float tauEtaAtEcalEntrance = -99.;
   float sumEtaTimesEnergy = 0.;
   float sumEnergy = 0.;
@@ -127,28 +138,95 @@ double PFRecoTauDiscriminationAgainstElectronMVA6::discriminate(const PFTauRef& 
 
     for (const auto& pfGamma : signalGammaCands) {
       double dR = deltaR(pfGamma->p4(), thePFTauRef->leadChargedHadrCand()->p4());
-      double signalrad = std::max(0.05, std::min(0.10, 3.0 / std::max(1.0, thePFTauRef->pt())));
+      double signalrad = std::max(0.05, std::min(0.10, 3.0 / std::max(0.0, thePFTauRef->pt())));
 
       // pfGammas inside the tau signal cone
       if (dR < signalrad) {
         numSignalGammaCandsInSigCone += 1;
       }
     }
+    
 
     // loop over the electrons
+   
+    const reco::GsfElectron* matchedGsfElectron = nullptr;
+
     for (const auto& theGsfElectron : *gsfElectrons_) {
-      if (theGsfElectron.pt() > 10.) {  // CV: only take electrons above some minimal energy/Pt into account...
+    
+       if (theGsfElectron.pt() > 10.) {  // CV: only take electrons above some minimal energy/Pt into account...
         double deltaREleTau = deltaR(theGsfElectron.p4(), thePFTauRef->p4());
         deltaRDummy = deltaREleTau;
-        if (deltaREleTau < 0.3) {
-          double mva_match = mva_->MVAValue(*thePFTauRef, theGsfElectron);
+	
+	if ( deltaREleTau < 0.2 && 
+	    (matchedGsfElectron == nullptr || (matchedGsfElectron != nullptr && theGsfElectron.pt() > (*matchedGsfElectron).pt())) ) {
+	    matchedGsfElectron = &theGsfElectron;
+	}
+       }	  
+     }
+     
+     if ( matchedGsfElectron != nullptr ) {
+	  
+	  //HGCAL stuff
+	  float HGCAL_sigmaUU =      0.;
+          float HGCAL_sigmaVV =      0.;
+          float HGCAL_sigmaEE =      0.;
+          float HGCAL_sigmaPP =      0.; 
+          float HGCAL_nLayers =      0.;  
+          float HGCAL_firstLayer =   0.;
+          float HGCAL_lastLayer =    0.; 
+          float HGCAL_layerEfrac10 = 0.;  
+          float HGCAL_layerEfrac90 = 0.;
+          float HGCAL_ecEnergyEE =   0.;
+          float HGCAL_ecEnergyFH =   0.;
+          float HGCAL_measuredDepth = 0.;	  
+          float HGCAL_expectedDepth = 0.;	  
+          float HGCAL_expectedSigma = 0.;	  
+	  float HGCAL_depthCompatibility = 0.;
+	  
+	  if(!matchedGsfElectron->isEB()) {
+	       eIDHelper_->computeHGCAL(*matchedGsfElectron, radius_);
+	       hgcal::LongDeps ld(eIDHelper_->energyPerLayer(radius_, true));
+               float HGCAL_measuredDepth, HGCAL_expectedDepth, HGCAL_expectedSigma;
+               HGCAL_depthCompatibility = eIDHelper_->clusterDepthCompatibility(ld, HGCAL_measuredDepth, HGCAL_expectedDepth, HGCAL_expectedSigma);
+	   
+	       HGCAL_sigmaUU = eIDHelper_->sigmaUU(); 
+	       HGCAL_sigmaVV = eIDHelper_->sigmaVV(); 
+	       HGCAL_sigmaEE = eIDHelper_->sigmaEE();
+	       HGCAL_sigmaPP = eIDHelper_->sigmaPP();
+	       HGCAL_nLayers = ld.nLayers();
+               HGCAL_firstLayer = ld.lastLayer();
+    	       HGCAL_lastLayer = ld.lastLayer();
+    	       HGCAL_layerEfrac10 = ld.layerEfrac10();
+    	       HGCAL_layerEfrac90 = ld.layerEfrac90();
+    	       HGCAL_ecEnergyEE = ld.energyEE();
+    	       HGCAL_ecEnergyFH = ld.energyFH();
+	  }
+          
+	  double mva_match = mva_->MVAValue(*thePFTauRef, *matchedGsfElectron, 
+	                                    HGCAL_sigmaUU,
+					    HGCAL_sigmaVV,
+					    HGCAL_sigmaEE,
+					    HGCAL_sigmaPP,
+					    HGCAL_nLayers,
+                                            HGCAL_firstLayer,
+    					    HGCAL_lastLayer,
+    					    HGCAL_layerEfrac10,
+    					    HGCAL_layerEfrac90,
+    					    HGCAL_ecEnergyEE,
+    					    HGCAL_ecEnergyFH,
+    					    HGCAL_measuredDepth,
+    					    HGCAL_expectedDepth,
+    					    HGCAL_expectedSigma,
+					    HGCAL_depthCompatibility);
+
           const reco::PFCandidatePtr& lpfch = thePFTauRef->leadPFChargedHadrCand();
           bool hasGsfTrack = false;
-          if (lpfch.isNonnull()) {
-            hasGsfTrack = lpfch->gsfTrackRef().isNonnull();
-          }
+          if (lpfch.isNonnull() && abs(lpfch->pdgId()) == 11) {
+            //hasGsfTrack = lpfch->gsfTrackRef().isNonnull();
+          hasGsfTrack = true;
+	  }
           if (!hasGsfTrack)
-            hasGsfTrack = theGsfElectron.gsfTrack().isNonnull();
+            hasGsfTrack = (*matchedGsfElectron).gsfTrack().isNonnull();
 
           //// Veto taus that go to Ecal crack
           if (vetoEcalCracks_ &&
@@ -166,19 +244,24 @@ double PFRecoTauDiscriminationAgainstElectronMVA6::discriminate(const PFTauRef& 
             } else if (numSignalGammaCandsInSigCone >= 1 && hasGsfTrack) {
               category = 7.;
             }
-          } else {  // Endcap
+          } else if ( std::abs(tauEtaAtEcalEntrance) > ECALBarrelEndcapEtaBorder && 
+	              std::abs(tauEtaAtEcalEntrance) < ECALEndcapEtaBorder) {  // Endcap
             if (numSignalGammaCandsInSigCone == 0 && hasGsfTrack) {
               category = 13.;
             } else if (numSignalGammaCandsInSigCone >= 1 && hasGsfTrack) {
               category = 15.;
             }
+          }  else if ( std::abs(tauEtaAtEcalEntrance) > ECALEndcapEtaBorder) { 
+	    if (numSignalGammaCandsInSigCone == 0 && hasGsfTrack) {
+              category = 14.;
+            } else if (numSignalGammaCandsInSigCone >= 1 && hasGsfTrack) {
+              category = 16.;
+            }   
           }
-
+	  
           mvaValue = std::min(mvaValue, mva_match);
           isGsfElectronMatched = true;
-        }  // deltaR < 0.3
-      }    // electron pt > 10
-    }      // end of loop over electrons
+     }      // end of loop over electrons
 
     if (!isGsfElectronMatched) {
       mvaValue = mva_->MVAValue(*thePFTauRef);
@@ -204,11 +287,18 @@ double PFRecoTauDiscriminationAgainstElectronMVA6::discriminate(const PFTauRef& 
         } else if (numSignalGammaCandsInSigCone >= 1 && !hasGsfTrack) {
           category = 2.;
         }
-      } else {  // Endcap
+      } else if (std::abs(tauEtaAtEcalEntrance) > ECALBarrelEndcapEtaBorder &&
+                 std::abs(tauEtaAtEcalEntrance) < ECALEndcapEtaBorder){  // Endcap
         if (numSignalGammaCandsInSigCone == 0 && !hasGsfTrack) {
           category = 8.;
         } else if (numSignalGammaCandsInSigCone >= 1 && !hasGsfTrack) {
           category = 10.;
+        }
+      }  else if (std::abs(tauEtaAtEcalEntrance) > ECALEndcapEtaBorder) { //VFEndcap
+        if (numSignalGammaCandsInSigCone == 0 && !hasGsfTrack) {
+          category = 9.;
+        } else if (numSignalGammaCandsInSigCone >= 1 && !hasGsfTrack) {
+          category = 11.;
         }
       }
     }
@@ -254,6 +344,7 @@ void PFRecoTauDiscriminationAgainstElectronMVA6::fillDescriptions(edm::Configura
   desc.add<std::string>("mvaName_woGwGSF_BL", "gbr_woGwGSF_BL");
   desc.add<bool>("returnMVA", true);
   desc.add<bool>("loadMVAfromDB", true);
+  desc.addOptional<edm::FileInPath>("inputFileName");
   {
     edm::ParameterSetDescription pset_Prediscriminants;
     pset_Prediscriminants.add<std::string>("BooleanOperator", "and");
@@ -286,6 +377,23 @@ void PFRecoTauDiscriminationAgainstElectronMVA6::fillDescriptions(edm::Configura
   desc.add<edm::InputTag>("srcGsfElectrons", edm::InputTag("gedGsfElectrons"));
   desc.add<std::string>("mvaName_NoEleMatch_woGwoGSF_EC", "gbr_NoEleMatch_woGwoGSF_EC");
   desc.add<double>("minMVANoEleMatchWgWOgsfEC", 0.0);
+  desc.add<std::string>("mvaName_wGwGSF_VFEC", "gbr_wGwGSF_VFEC");
+  desc.add<std::string>("mvaName_woGwGSF_VFEC", "gbr_woGwGSF_VFEC");
+  desc.add<double>("minMVAWOgWgsfVFEC", 0.0);
+  desc.add<double>("minMVAWgWgsfVFEC", 0.0);
+  desc.add<std::string>("mvaName_NoEleMatch_wGwoGSF_VFEC", "gbr_NoEleMatch_wGwoGSF_VFEC");
+  desc.add<std::string>("mvaName_NoEleMatch_woGwoGSF_VFEC", "gbr_NoEleMatch_woGwoGSF_VFEC");
+  desc.add<double>("minMVANoEleMatchWgWOgsfVFEC", 0.0);
+  desc.add<double>("minMVANoEleMatchWOgWOgsfVFEC", 0.0);
+  //for HGCalEgammaIDHelper
+  desc.add<double>("pcaRadius", 3.0);
+  desc.add<std::vector<double>>("dEdXWeights")->setComment("This must be copie from dEdX_weights in RecoLocalCalo.HGCalRecProducers.HGCalRecHit_cfi");  
+  desc.add<unsigned int>("isoNRings", 5);
+  desc.add<double>("isoDeltaR", 0.15);
+  desc.add<double>("isoDeltaRmin", 0.0);
+  desc.add<edm::InputTag>("EERecHits", edm::InputTag("HGCalRecHit","HGCEERecHits"));
+  desc.add<edm::InputTag>("FHRecHits", edm::InputTag("HGCalRecHit","HGCHEFRecHits"));
+  desc.add<edm::InputTag>("BHRecHits", edm::InputTag("HGCalRecHit","HGCHEBRecHits"));
   descriptions.add("pfRecoTauDiscriminationAgainstElectronMVA6", desc);
 }
 
