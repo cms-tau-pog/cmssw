@@ -11,6 +11,9 @@
 #include "CondFormats/DataRecord/interface/GBRWrapperRcd.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 
+#include "MagneticField/Engine/interface/MagneticField.h"
+#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
+
 #include <TMath.h>
 #include <TFile.h>
 #include <array>
@@ -54,6 +57,7 @@ AntiElectronIDMVA6::AntiElectronIDMVA6(const edm::ParameterSet& cfg)
   Var_woGwGSF_Endcap_ = new Float_t[23];
   Var_wGwGSF_Endcap_ = new Float_t[31];
 
+  bField_ = 0;
   verbosity_ = 0;
 }
 
@@ -130,7 +134,10 @@ void AntiElectronIDMVA6::beginEvent(const edm::Event& evt, const edm::EventSetup
     }
     isInitialized_ = true;
   }
-  positionAtECalEntrance_.beginEvent(es);
+
+  edm::ESHandle<MagneticField> pSetup;
+  es.get<IdealMagneticFieldRecord>().get(pSetup);
+  bField_ = pSetup->inTesla(GlobalPoint(0, 0, 0)).z();
 }
 
 double AntiElectronIDMVA6::MVAValue(Float_t TauPt,
@@ -617,11 +624,9 @@ double AntiElectronIDMVA6::MVAValue(const reco::PFTau& thePFTau, const reco::Gsf
     for (const auto& signalPFCand : signalPFCands) {
       reco::Candidate const* signalCand = signalPFCand.get();
       float phi = thePFTau.phi();
-      bool success = false;
-      reco::Candidate::Point aPos = positionAtECalEntrance_(signalCand, success);
-      if ( success ) {
+      math::XYZPoint aPos;
+      if (atECalEntrance(signalCand, aPos))
         phi = aPos.Phi();
-      }
       sumPhiTimesEnergy += phi * signalCand->energy();
       sumEnergy += signalCand->energy();
     }
@@ -834,11 +839,9 @@ double AntiElectronIDMVA6::MVAValue(const reco::PFTau& thePFTau) {
     for (const auto& signalPFCand : signalPFCands) {
       reco::Candidate const* signalCand = signalPFCand.get();
       float phi = thePFTau.phi();
-      bool success = false;
-      reco::Candidate::Point aPos = positionAtECalEntrance_(signalCand, success);
-      if ( success ) {
+      math::XYZPoint aPos;
+      if (atECalEntrance(signalCand, aPos) == true)
         phi = aPos.Phi();
-      }
       sumPhiTimesEnergy += phi * signalCand->energy();
       sumEnergy += signalCand->energy();
     }
@@ -978,11 +981,9 @@ double AntiElectronIDMVA6::MVAValue(const pat::Tau& theTau, const pat::Electron&
     for (const auto& signalCandPtr : signalCands) {
       reco::Candidate const* signalCand = signalCandPtr.get();
       float phi = theTau.phi();
-      bool success = false;
-      reco::Candidate::Point aPos = positionAtECalEntrance_(signalCand, success);
-      if ( success ) {
+      math::XYZPoint aPos;
+      if (atECalEntrance(signalCand, aPos) == true)
         phi = aPos.Phi();
-      }
       sumPhiTimesEnergy += phi * signalCand->energy();
       sumEnergy += signalCand->energy();
     }
@@ -1171,11 +1172,9 @@ double AntiElectronIDMVA6::MVAValue(const pat::Tau& theTau) {
     for (const auto& signalCandPtr : signalCands) {
       reco::Candidate const* signalCand = signalCandPtr.get();
       float phi = theTau.phi();
-      bool success = false;
-      reco::Candidate::Point aPos = positionAtECalEntrance_(signalCand, success);
-      if ( success ) {
+      math::XYZPoint aPos;
+      if (atECalEntrance(signalCand, aPos) == true)
         phi = aPos.Phi();
-      }
       sumPhiTimesEnergy += phi * signalCand->energy();
       sumEnergy += signalCand->energy();
     }
@@ -1329,4 +1328,23 @@ double AntiElectronIDMVA6::dCrackEta(double eta) {
   }
 
   return std::abs(retVal);
+}
+
+bool AntiElectronIDMVA6::atECalEntrance(const reco::Candidate* part, math::XYZPoint& pos) {
+  bool result = false;
+  BaseParticlePropagator theParticle = BaseParticlePropagator(
+      RawParticle(math::XYZTLorentzVector(part->px(), part->py(), part->pz(), part->energy()),
+                  math::XYZTLorentzVector(part->vertex().x(), part->vertex().y(), part->vertex().z(), 0.),
+                  part->charge()),
+      0.,
+      0.,
+      bField_);
+  theParticle.propagateToEcalEntrance(false);
+  if (theParticle.getSuccess() != 0) {
+    pos = math::XYZPoint(theParticle.particle().vertex());
+    result = true;
+  } else {
+    result = false;
+  }
+  return result;
 }
