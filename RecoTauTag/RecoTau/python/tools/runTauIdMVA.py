@@ -9,7 +9,7 @@ class TauIDEmbedder(object):
         "2017v1", "2017v2", "newDM2017v2", "dR0p32017v2", "2016v1", "newDM2016v1",
         "deepTau2017v1", "deepTau2017v2", "deepTau2017v2p1",
         "DPFTau_2016_v0", "DPFTau_2016_v1",
-        "againstEle2018"
+        "againstEle2018", "MVADM_2017_v1"
     ]
 
     def __init__(self, process, cms, debug = False,
@@ -1109,6 +1109,29 @@ class TauIDEmbedder(object):
                 _againstElectronTauIDSources
             )
             tauIDSources =_tauIDSourcesWithAgainistEle.clone()
+
+
+        if "MVADM_2017_v1" in self.toKeep:
+          self.process.patDiscriminationMVADM2017v1 = self.cms.EDProducer("PATTauDiscriminationMVADM",
+            PATTauProducer = self.cms.InputTag('slimmedTaus'),
+            version = self.cms.string('MVADM_2017_v1'),
+            Prediscriminants = noPrediscriminants,
+          )
+
+          tauIDSources.MVADM2017v1DMotherraw = self.cms.InputTag('patDiscriminationMVADM2017v1','DMother')
+          tauIDSources.MVADM2017v1DM0raw = self.cms.InputTag('patDiscriminationMVADM2017v1','DM0')
+          tauIDSources.MVADM2017v1DM1raw = self.cms.InputTag('patDiscriminationMVADM2017v1','DM1')
+          tauIDSources.MVADM2017v1DM2raw = self.cms.InputTag('patDiscriminationMVADM2017v1','DM2')
+          tauIDSources.MVADM2017v1DM10raw = self.cms.InputTag('patDiscriminationMVADM2017v1','DM10')
+          tauIDSources.MVADM2017v1DM11raw = self.cms.InputTag('patDiscriminationMVADM2017v1','DM11')
+          tauIDSources.MVADM2017v1 = self.cms.InputTag('patDiscriminationMVADM2017v1')
+
+          self.process.patDiscriminationMVADM2017v1Task = self.cms.Task(
+                self.process.patDiscriminationMVADM2017v1
+          )
+          self.process.patDiscriminationMVADM2017v1Seq = self.cms.Sequence(self.process.patDiscriminationMVADM2017v1Task)
+          self.process.rerunMvaIsolationTask.add(self.process.patDiscriminationMVADM2017v1Task)
+          self.process.rerunMvaIsolationSequence += self.process.patDiscriminationMVADM2017v1Seq
 
         ##
         if self.debug: print 'Embedding new TauIDs into \"'+self.updatedTauName+'\"'
