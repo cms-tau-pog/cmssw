@@ -1143,7 +1143,7 @@ class BoostedTauIDEmbedder(object):
         ##
         if self.debug: print 'Embedding new TauIDs into \"'+self.updatedTauName+'\"'
         if not hasattr(self.process, self.updatedTauName):
-            embedID = self.cms.EDProducer("PATBoostedTauIDEmbedder",
+            embedID = self.cms.EDProducer("PATTauIDEmbedder",
                src = self.PATTauProducer,
                tauIDSources = tauIDSources
             )
