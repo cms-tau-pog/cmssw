@@ -103,9 +103,9 @@ _mvaAntiEVars = cms.PSet(
        rawAntiEle2018 = Var("tauID('againstElectronMVA6Raw')", float, doc= "Anti-electron MVA discriminator V6 raw output discriminator (2018)", precision=10),
        rawAntiEleCat2018 = Var("tauID('againstElectronMVA6category')", int, doc="Anti-electron MVA discriminator V6 category (2018)"),
        idAntiEle2018 = _tauId5WPMask("againstElectron%sMVA6", doc= "Anti-electron MVA discriminator V6 (2018)"),
-       rawAntiEle = Var("tauID('againstElectronMVA6Raw2015')", float, doc= "Anti-electron MVA discriminator V6 raw output discriminator (2015)", precision=10),
-       rawAntiEleCat = Var("tauID('againstElectronMVA6category2015')", int, doc="Anti-electron MVA discriminator V6 category (2015)"),
-       idAntiEle = _tauId5WPMask("againstElectron%sMVA62015", doc= "Anti-electron MVA discriminator V6 (2015)"),
+       #rawAntiEle = Var("tauID('againstElectronMVA6Raw2015')", float, doc= "Anti-electron MVA discriminator V6 raw output discriminator (2015)", precision=10),
+       #rawAntiEleCat = Var("tauID('againstElectronMVA6category2015')", int, doc="Anti-electron MVA discriminator V6 category (2015)"),
+       #idAntiEle = _tauId5WPMask("againstElectron%sMVA62015", doc= "Anti-electron MVA discriminator V6 (2015)"),
 )
 _mvaAntiEVars2015 = cms.PSet(
        rawAntiEle = Var("tauID('againstElectronMVA6Raw')", float, doc= "Anti-electron MVA discriminator V6 raw output discriminator (2015)", precision=10),
