@@ -5,7 +5,6 @@ from PhysicsTools.NanoAOD.nano_eras_cff import *
 from PhysicsTools.NanoAOD.jets_cff import *
 from PhysicsTools.NanoAOD.muons_cff import *
 from PhysicsTools.NanoAOD.taus_cff import *
-#include new boosted tau configuration
 from PhysicsTools.NanoAOD.boostedTaus_cff import *
 from PhysicsTools.NanoAOD.electrons_cff import *
 from PhysicsTools.NanoAOD.photons_cff import *
@@ -149,13 +148,7 @@ def nanoAOD_addBoostedTauIds(process):
                                                      originalTauName = "slimmedTausBoosted",
                                                      updatedTauName = updatedBoostedTauName,
                                                      postfix="Boosted",
-                                                     toKeep = [ "2017v2", "dR0p32017v2", "newDM2017v2",
-                                                                # "deepTau2017v1",
-                                                                #"deepTau2017v2p1",
-                                                                # "DPFTau_2016_v0",
-                                                                # "DPFTau_2016_v1",
-                                                                "againstEle2018",
-                                                            ])
+                                                     toKeep = [ "2017v2", "dR0p32017v2", "newDM2017v2","againstEle2018",])
     boostedTauIdEmbedder.runTauID()
     process.boostedTauSequence.insert(process.boostedTauSequence.index(getattr(process, "finalBoostedTaus")),
                                       process.rerunMvaIsolationSequenceBoosted)
