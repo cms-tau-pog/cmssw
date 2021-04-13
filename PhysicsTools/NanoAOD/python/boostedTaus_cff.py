@@ -74,6 +74,8 @@ _boostedTauVarsBase = cms.PSet(P4Vars,
        idAntiEle2018 = _tauId5WPMask("againstElectron%sMVA6", doc= "Anti-electron MVA discriminator V6 (2018)"),
 )
 
+boostedTauTable.variables = _boostedTauVarsBase
+
 tauGenJets.GenParticles = cms.InputTag("prunedGenParticles")
 tauGenJets.includeNeutrinos = cms.bool(False)
 
