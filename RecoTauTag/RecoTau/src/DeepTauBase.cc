@@ -26,11 +26,11 @@ namespace deep_tau {
     if (!simple_value) {
       static const std::string prefix =
           "[&](double *x, double *p) { const int decayMode = p[0];"
-          "const double pt = p[1]; const double eta = p[2];";
+          "const double pt = p[1]; const double eta = p[2]; return ";
       static const int n_params = 3;
       static const auto handler = [](int, Bool_t, const char*, const char*) -> void {};
 
-      const std::string fn_str = prefix + cut_str + "}";
+      const std::string fn_str = prefix + cut_str + ";}";
       auto old_handler = SetErrorHandler(handler);
       fn_ = std::make_unique<TF1>("fn_", fn_str.c_str(), 0, 1, n_params);
       SetErrorHandler(old_handler);
@@ -40,15 +40,16 @@ namespace deep_tau {
   }
 
   double TauWPThreshold::operator()(const reco::BaseTau& tau, bool isPFTau) const {
-    if (!fn_)
+    if (!fn_){
       return value_;
+    }
 
     if (isPFTau)
       fn_->SetParameter(0, dynamic_cast<const reco::PFTau&>(tau).decayMode());
     else
       fn_->SetParameter(0, dynamic_cast<const pat::Tau&>(tau).decayMode());
     fn_->SetParameter(1, tau.pt());
-    fn_->SetParameter(2, tau.eta());
+    fn_->SetParameter(2, tau.eta()); 
     return fn_->Eval(0);
   }
 
