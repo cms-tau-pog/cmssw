@@ -111,6 +111,9 @@ nanoSequenceCommon = cms.Sequence(
         linkedObjects  +
         jetTables + muonTables + tauTables + boostedTauTables + electronTables + photonTables +  globalTables +vertexTables+ metTables+simpleCleanerTable + isoTrackTables
         )
+#remove boosted tau from previous eras
+(run2_miniAOD_80XLegacy | run2_nanoAOD_92X | run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1 | run2_nanoAOD_106Xv1).toReplaceWith(nanoSequenceCommon, nanoSequenceCommon.copyAndExclude([boostedTauSequence, boostedTauTables]))
+
 nanoSequenceOnlyFullSim = cms.Sequence(triggerObjectTables + l1bits)
 nanoSequenceOnlyData = cms.Sequence(protonTables + lhcInfoTable)
 
@@ -121,6 +124,9 @@ nanoSequenceFS = cms.Sequence(genParticleSequence + genVertexTables + particleLe
 (run2_nanoAOD_92X | run2_miniAOD_80XLegacy | run2_nanoAOD_94X2016 | run2_nanoAOD_94X2016 | \
     run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94XMiniAODv2 | \
     run2_nanoAOD_102Xv1).toReplaceWith(nanoSequenceFS, nanoSequenceFS.copyAndExclude([genVertexTable, genVertexT0Table]))
+
+#remove boosted tau from previous eras
+(run2_miniAOD_80XLegacy | run2_nanoAOD_92X | run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1 | run2_nanoAOD_106Xv1).toReplaceWith(nanoSequenceFS, nanoSequenceFS.copyAndExclude([boostedTauMC]))
 
 # GenVertex only stored in newer MiniAOD
 nanoSequenceMC = nanoSequenceFS.copy()
@@ -155,7 +161,8 @@ def nanoAOD_addBoostedTauIds(process):
 
     process.boostedTauSequence.insert(process.boostedTauSequence.index(getattr(process, "finalBoostedTaus")),
                                       getattr(process, updatedBoostedTauName))
-
+    #If we are in a previous era, remove boosted tau ID sequences
+    (run2_miniAOD_80XLegacy | run2_nanoAOD_92X | run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1 | run2_nanoAOD_106Xv1).toReplaceWith(process.boostedTauSequence, process.boostedTauSequence.copyAndExclude([process.rerunMvaIsolationSequenceBoosted,getattr(process,updatedBoostedTauName)]))
 
     return process
  
@@ -390,7 +397,7 @@ def nanoAOD_customizeCommon(process):
                                      addParticleNet=nanoAOD_addDeepInfoAK8_switch.nanoAOD_addParticleNet_switch,
                                      jecPayload=nanoAOD_addDeepInfoAK8_switch.jecPayload)
     (run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1 | run2_nanoAOD_106Xv1).toModify(process, lambda p : nanoAOD_addTauIds(p))
-    (run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1 | run2_nanoAOD_106Xv1 | run2_nanoAOD_106Xv2).toModify(process, lambda p : nanoAOD_addBoostedTauIds(p))
+    nanoAOD_addBoostedTauIds(process) #adds boosted tau ID sequence by default
     return process
 
 def nanoAOD_customizeData(process):
