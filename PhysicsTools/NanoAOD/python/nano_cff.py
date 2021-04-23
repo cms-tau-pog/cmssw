@@ -156,13 +156,11 @@ def nanoAOD_addBoostedTauIds(process):
                                                      postfix="Boosted",
                                                      toKeep = [ "2017v2", "dR0p32017v2", "newDM2017v2","againstEle2018",])
     boostedTauIdEmbedder.runTauID()
-    process.boostedTauSequence.insert(process.boostedTauSequence.index(getattr(process, "finalBoostedTaus")),
+    process.boostedTauSequence.insert(process.boostedTauSequence.index(process.finalBoostedTaus),
                                       process.rerunMvaIsolationSequenceBoosted)
 
-    process.boostedTauSequence.insert(process.boostedTauSequence.index(getattr(process, "finalBoostedTaus")),
+    process.boostedTauSequence.insert(process.boostedTauSequence.index(process.finalBoostedTaus),
                                       getattr(process, updatedBoostedTauName))
-    #If we are in a previous era, remove boosted tau ID sequences
-    (run2_miniAOD_80XLegacy | run2_nanoAOD_92X | run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1 | run2_nanoAOD_106Xv1).toReplaceWith(process.boostedTauSequence, process.boostedTauSequence.copyAndExclude([process.rerunMvaIsolationSequenceBoosted,getattr(process,updatedBoostedTauName)]))
 
     return process
  
@@ -397,7 +395,7 @@ def nanoAOD_customizeCommon(process):
                                      addParticleNet=nanoAOD_addDeepInfoAK8_switch.nanoAOD_addParticleNet_switch,
                                      jecPayload=nanoAOD_addDeepInfoAK8_switch.jecPayload)
     (run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1 | run2_nanoAOD_106Xv1).toModify(process, lambda p : nanoAOD_addTauIds(p))
-    nanoAOD_addBoostedTauIds(process) #adds boosted tau ID sequence by default
+    (~(run2_nanoAOD_94XMiniAODv1 | run2_nanoAOD_94X2016 | run2_nanoAOD_94XMiniAODv2 | run2_nanoAOD_102Xv1 | run2_nanoAOD_106Xv1)).toModify(process, lambda p : nanoAOD_addBoostedTauIds(p))
     return process
 
 def nanoAOD_customizeData(process):
