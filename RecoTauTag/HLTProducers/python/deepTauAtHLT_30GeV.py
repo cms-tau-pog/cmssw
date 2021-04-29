@@ -17,7 +17,7 @@ ak4dBetaCorrection = 0.20
 def update(process):
     process.options.wantSummary = cms.untracked.bool(True)
 
-    process.hltFixedGridRhoFastjetAll = cms.EDProducer( "FixedGridRhoProducerFastjet",
+    process.hltFixedGridRhoFastjetAllTau = cms.EDProducer( "FixedGridRhoProducerFastjet",
         gridSpacing = cms.double( 0.55 ),
         maxRapidity = cms.double( 5.0 ),
         pfCandidatesTag = cms.InputTag( "hltParticleFlowReg" )
@@ -164,7 +164,7 @@ def update(process):
         taus_to_compare = 'hltHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg',
         pfcands = 'hltParticleFlowReg',
         vertices = 'hltPixelVertices',
-        rho = 'hltFixedGridRhoFastjetAll',
+        rho = 'hltFixedGridRhoFastjetAllTau',
         graph_file = file_names,
         disable_dxy_pca = cms.bool(True),
         is_online = cms.bool(True),
@@ -179,29 +179,39 @@ def update(process):
     )	
 
     # Add DeepTauProducer
-    process.HLTHPSMediumChargedIsoPFTauSequenceReg += (process.hpsPFTauPrimaryVertexProducer  + process.hpsPFTauSecondaryVertexProducer + process.hpsPFTauTransverseImpactParameters + process.hltFixedGridRhoFastjetAll + process.hpsPFTauBasicDiscriminators + process.hpsPFTauBasicDiscriminatorsdR03 + process.hltHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg + process.deepTauProducer)
-    process.HLTHPSMediumChargedIsoPFTauSequenceReg.remove(process.hltHpsPFTauMediumAbsoluteChargedIsolationDiscriminatorReg)
-    process.HLTHPSMediumChargedIsoPFTauSequenceReg.remove(process.hltHpsPFTauMediumRelativeChargedIsolationDiscriminatorReg)
-    process.HLTHPSMediumChargedIsoPFTauSequenceReg.remove(process.hltHpsPFTauMediumAbsOrRelChargedIsolationDiscriminatorReg)
-
-
-    process.hltHpsSelectedPFTausTrackPt1MediumChargedIsolationReg.discriminators = cms.VPSet( 
-      cms.PSet(  discriminator = cms.InputTag( "hltHpsPFTauTrackPt1DiscriminatorReg" ),
-        selectionCut = cms.double( 0.5 )
-      )
+    process.HLTHPSDeepTau30IsoPFTauSequenceReg = cms.Sequence(process.hpsPFTauPrimaryVertexProducer + process.hpsPFTauSecondaryVertexProducer + process.hpsPFTauTransverseImpactParameters + process.hltFixedGridRhoFastjetAllTau + process.hpsPFTauBasicDiscriminators + process.hpsPFTauBasicDiscriminatorsdR03 + process.hltHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg + process.deepTauProducer)
+    process.hltHpsSelectedPFTausTrackPt1DeepTau30IsolationReg = process.hltHpsSelectedPFTausTrackPt1MediumChargedIsolationReg.clone(
+        discriminators = [
+            cms.PSet(  
+                discriminator = cms.InputTag( "hltHpsPFTauTrackPt1DiscriminatorReg" ),
+                selectionCut = cms.double( 0.5 )
+            )
+        ],
+        discriminatorContainers = [
+            cms.PSet(  discriminator = cms.InputTag( "deepTauProducer", "VSjet" ),
+                rawValues = cms.vstring(),
+                selectionCuts = cms.vdouble(),
+                workingPoints = cms.vstring(['test']),
+            )
+        ]
     )
 
-    process.hltHpsSelectedPFTausTrackPt1MediumChargedIsolationReg.discriminatorContainers = cms.VPSet( 
-      cms.PSet(  discriminator = cms.InputTag( "deepTauProducer", "VSjet" ),
-        rawValues = cms.vstring(),
-        selectionCuts = cms.vdouble(),
-        workingPoints = cms.vstring(['test']),
-      )
+    process.hltHpsDoublePFTau30TrackPt1DeepTau30IsolationReg = process.hltHpsDoublePFTau30TrackPt1MediumChargedIsolationReg.clone(
+        inputTag = "hltHpsSelectedPFTausTrackPt1DeepTau30IsolationReg",
     )
 
-    # process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.remove(process.hltHpsSelectedPFTausTrackPt1MediumChargedIsolationReg)
-    # process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.remove(process.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationReg)
+    process.hltHpsDoublePFTau30TrackPt1DeepTau30IsolationDz02Reg = process.hltHpsDoublePFTau30TrackPt1MediumChargedIsolationDz02Reg.clone(
+        JetSrc = "hltHpsSelectedPFTausTrackPt1DeepTau30IsolationReg"
+    )
+
+    process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.remove(process.HLTHPSDoublePFTauPt35Eta2p1Trk1Reg)
+    process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.remove(process.HLTHPSMediumChargedIsoPFTauSequenceReg)
+    process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.remove(process.hltHpsSelectedPFTausTrackPt1MediumChargedIsolationReg)
+    process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.remove(process.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationReg)
     process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.remove(process.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationL1HLTMatchedReg)
-    # process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.remove(process.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationDz02Reg)
+    process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4.remove(process.hltHpsDoublePFTau35TrackPt1MediumChargedIsolationDz02Reg)
     
+    process.HLT_DoubleMediumChargedIsoPFTauHPS35_Trk1_eta2p1_Reg_v4 += (process.HLTHPSDoublePFTauPt30Eta2p1Trk1Reg + process.HLTHPSDeepTau30IsoPFTauSequenceReg + process.hltHpsSelectedPFTausTrackPt1DeepTau30IsolationReg + process.hltHpsDoublePFTau30TrackPt1DeepTau30IsolationReg + process.hltHpsDoublePFTau30TrackPt1DeepTau30IsolationDz02Reg)
+
     return process
+
