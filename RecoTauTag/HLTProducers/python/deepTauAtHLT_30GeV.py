@@ -171,8 +171,6 @@ def update(process):
         basicTauDiscriminators = 'hpsPFTauBasicDiscriminators',
         basicTauDiscriminatorsdR03 = 'hpsPFTauBasicDiscriminatorsdR03',
         Prediscriminants = cms.PSet(  BooleanOperator = cms.string( "and" ) ),  
-        workingPoints = cms.vstring(['test']),
-        rawValues = cms.vstring(['test']),
         VSeWP = working_points,
         VSmuWP = working_points,
         VSjetWP = working_points     
@@ -191,7 +189,7 @@ def update(process):
             cms.PSet(  discriminator = cms.InputTag( "deepTauProducer", "VSjet" ),
                 rawValues = cms.vstring(),
                 selectionCuts = cms.vdouble(),
-                workingPoints = cms.vstring(['test']),
+                workingPoints = cms.vstring(working_points),
             )
         ]
     )

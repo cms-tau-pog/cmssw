@@ -126,6 +126,8 @@ struct PFTauSelectorDefinition {
               throw cms::Exception("Configuration")
                   << "PFTauSelector: Requested working point '" << disc.rawLabels[i] << "' not found!\n";
           }
+        } else if (psetsFromProvenance.exists("VSjetWP")) {
+          ;
         } else
           throw cms::Exception("Configuration") << "PFTauSelector: No suitable ID list found in provenace config!\n";
         // find working point indices
@@ -157,8 +159,22 @@ struct PFTauSelectorDefinition {
               throw cms::Exception("Configuration")
                   << "PFTauSelector: Requested working point '" << disc.wpLabels[i] << "' not found!\n";
           }
+        } else if (psetsFromProvenance.exists("VSjetWP")) {
+          auto const idlist = psetsFromProvenance.getParameter<std::vector<std::string>>("VSjetWP");
+          for (size_t i = 0; i < disc.wpLabels.size(); ++i) {
+            bool found = false;
+            for (size_t j = 0; j < idlist.size(); ++j) {
+              if (disc.wpLabels[i] == idlist[j]) {
+                found = true;
+                disc.wpCuts[i] = j;
+              }
+            }
+            if (!found)
+              throw cms::Exception("Configuration")
+                  << "PFTauSelector: Requested working point '" << disc.wpLabels[i] << "' not found!\n";
+          }
         } else
-          throw cms::Exception("Configuration") << "PFTauSelector: No suitable ID list found in provenace config!\n";
+          throw cms::Exception("Configuration") << "PFTauSelector: No suitable ID WP list found in provenace config!\n";
       }
     }
 
