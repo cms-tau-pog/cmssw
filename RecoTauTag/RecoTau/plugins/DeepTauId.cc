@@ -1190,7 +1190,6 @@ public:
 public:
   explicit DeepTauId(const edm::ParameterSet& cfg, const deep_tau::DeepTauCache* cache)
       : DeepTauBase(cfg, GetOutputs(), cache),
-        tau_to_compare_token_(consumes<TauCollection>(cfg.getParameter<edm::InputTag>("taus_to_compare"))),
         electrons_token_(consumes<std::vector<pat::Electron>>(cfg.getParameter<edm::InputTag>("electrons"))),
         muons_token_(consumes<std::vector<pat::Muon>>(cfg.getParameter<edm::InputTag>("muons"))),
         rho_token_(consumes<double>(cfg.getParameter<edm::InputTag>("rho"))),
@@ -1202,7 +1201,6 @@ public:
             consumes<edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef>>>(
                 cfg.getParameter<edm::InputTag>("pfTauTransverseImpactParameters"))),
         version_(cfg.getParameter<unsigned>("version")),
-        tau_to_compare_tag_(cfg.getParameter<edm::InputTag>("taus_to_compare")),
         debug_level(cfg.getParameter<int>("debug_level")),
         disable_dxy_pca_(cfg.getParameter<bool>("disable_dxy_pca")),
         disable_hcalFraction_workaround_(cfg.getParameter<bool>("disable_hcalFraction_workaround")),
@@ -1427,7 +1425,6 @@ private:
     // Empty dummy vectors
     const std::vector<pat::Electron> electron_collection_default;
     const std::vector<pat::Muon> muon_collection_default;
-    const TauCollection tau_to_compare_collection_default;
     const reco::TauDiscriminatorContainer basicTauDiscriminators_default;
     const reco::TauDiscriminatorContainer basicTauDiscriminatorsdR03_default;
     const edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef>>
@@ -1435,7 +1432,6 @@ private:
 
     const std::vector<pat::Electron>* electron_collection;
     const std::vector<pat::Muon>* muon_collection;
-    const TauCollection* tau_to_compare_collection;
     const reco::TauDiscriminatorContainer* basicTauDiscriminators;
     const reco::TauDiscriminatorContainer* basicTauDiscriminatorsdR03;
     const edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef>>*
@@ -1495,22 +1491,7 @@ private:
             patPrediscriminants_, andPrediscriminants_, tauRef);
       }
 
-      bool has_tau_to_compare_match = false;
-      if (tau_to_compare_tag_.label() != "default"){
-        tau_to_compare_collection = &event.get(tau_to_compare_token_);
-        for(size_t tau_to_compare_index = 0; tau_to_compare_index < tau_to_compare_collection->size(); ++tau_to_compare_index){
-          const double tau_to_compare_deltaR = reco::deltaR(taus->at(tau_index).p4(), tau_to_compare_collection->at(tau_to_compare_index).p4());
-          if(tau_to_compare_deltaR < 0.01){
-            has_tau_to_compare_match = true;
-            break;
-          }
-        }
-      } else {
-          tau_to_compare_collection = &tau_to_compare_collection_default;
-          has_tau_to_compare_match = true;
-      }
-
-      if (passesPrediscriminants && has_tau_to_compare_match) {
+      if (passesPrediscriminants) {
         if (version_ == 1) {
           if (is_online_)
             getPredictionsV1<reco::PFCandidate, reco::PFTau>(
@@ -2820,7 +2801,6 @@ private:
   }
 
 private:
-  edm::EDGetTokenT<TauCollection> tau_to_compare_token_;
   edm::EDGetTokenT<std::vector<pat::Electron>> electrons_token_;
   edm::EDGetTokenT<std::vector<pat::Muon>> muons_token_;
   edm::EDGetTokenT<double> rho_token_;
@@ -2830,7 +2810,6 @@ private:
       pfTauTransverseImpactParameters_token_;
   std::string input_layer_, output_layer_;
   const unsigned version_;
-  const edm::InputTag tau_to_compare_tag_;
   const int debug_level;
   const bool disable_dxy_pca_;
   const bool disable_hcalFraction_workaround_;

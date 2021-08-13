@@ -160,8 +160,7 @@ def update(process):
     working_points = ["{0}*(pt < 35)+".format(val1)+getLinExpression("35", "300", val1, val2)+ "*(35 <= pt && pt < 300) + {0}*(pt >= 300)".format(val2)]
 
     process.deepTauProducer = DeepTau.clone(
-        taus = 'hltHpsPFTauProducerReg',
-        taus_to_compare = 'hltHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg',
+        taus = 'hltHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg',
         pfcands = 'hltParticleFlowReg',
         vertices = 'hltPixelVertices',
         rho = 'hltFixedGridRhoFastjetAllTau',
