@@ -3,6 +3,7 @@
 #include "DataFormats/HLTReco/interface/TriggerTypeDefs.h"
 #include "FWCore/Utilities/interface/EDMException.h"
 #include "DataFormats/TauReco/interface/PFTau.h"
+#include "DataFormats/Common/interface/RefVector.h"
 
 //
 // class decleration
@@ -16,12 +17,12 @@ L1THLTTauMatching::L1THLTTauMatching(const edm::ParameterSet& iConfig)
     : jetSrc(consumes<PFTauCollection>(iConfig.getParameter<InputTag>("JetSrc"))),
       tauTrigger(consumes<trigger::TriggerFilterObjectWithRefs>(iConfig.getParameter<InputTag>("L1TauTrigger"))),
       mEt_Min(iConfig.getParameter<double>("EtMin")) {
-  produces<PFTauCollection>();
+  produces<RefVector<PFTauCollection>>();
 }
 L1THLTTauMatching::~L1THLTTauMatching() {}
 
 void L1THLTTauMatching::produce(edm::StreamID iSId, edm::Event& iEvent, const edm::EventSetup& iES) const {
-  unique_ptr<PFTauCollection> tauL2jets(new PFTauCollection);
+  unique_ptr<RefVector<PFTauCollection>> tauL2jets(new RefVector<PFTauCollection>);
 
   double deltaR = 1.0;
   double matchingR = 0.5;
@@ -47,9 +48,10 @@ void L1THLTTauMatching::produce(edm::StreamID iSId, edm::Event& iEvent, const ed
         if (myJet.leadChargedHadrCand().isNonnull()) {
           a = myJet.leadChargedHadrCand()->vertex();
         }
-        PFTau myPFTau(std::numeric_limits<int>::quiet_NaN(), myJet.p4(), a);
+        // PFTau myPFTau(std::numeric_limits<int>::quiet_NaN(), myJet.p4(), a);
         if (myJet.pt() > mEt_Min) {
-          tauL2jets->push_back(myPFTau);
+          edm::Ref<PFTauCollection> jetRef(tauJets, iJet);
+          tauL2jets->push_back(jetRef);
         }
         break;
       }
@@ -71,3 +73,4 @@ void L1THLTTauMatching::fillDescriptions(edm::ConfigurationDescriptions& descrip
       "returned PFTaus are set).");
   descriptions.add("L1THLTTauMatching", desc);
 }
+
