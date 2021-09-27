@@ -28,5 +28,6 @@ private:
   const edm::EDGetTokenT<reco::PFTauCollection> jetSrc;
   const edm::EDGetTokenT<trigger::TriggerFilterObjectWithRefs> tauTrigger;
   const double mEt_Min;
+  const bool simplifiedTau;
 };
 #endif

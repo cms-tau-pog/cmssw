@@ -16,13 +16,14 @@ using namespace trigger;
 L1THLTTauMatching::L1THLTTauMatching(const edm::ParameterSet& iConfig)
     : jetSrc(consumes<PFTauCollection>(iConfig.getParameter<InputTag>("JetSrc"))),
       tauTrigger(consumes<trigger::TriggerFilterObjectWithRefs>(iConfig.getParameter<InputTag>("L1TauTrigger"))),
-      mEt_Min(iConfig.getParameter<double>("EtMin")) {
-  produces<RefVector<PFTauCollection>>();
+      mEt_Min(iConfig.getParameter<double>("EtMin")),
+      simplifiedTau(iConfig.getParameter<bool>("SimplifiedTau")) {
+  produces<PFTauCollection>();
 }
 L1THLTTauMatching::~L1THLTTauMatching() {}
 
 void L1THLTTauMatching::produce(edm::StreamID iSId, edm::Event& iEvent, const edm::EventSetup& iES) const {
-  unique_ptr<RefVector<PFTauCollection>> tauL2jets(new RefVector<PFTauCollection>);
+  unique_ptr<PFTauCollection> tauL2jets(new PFTauCollection);
 
   double deltaR = 1.0;
   double matchingR = 0.5;
@@ -48,10 +49,17 @@ void L1THLTTauMatching::produce(edm::StreamID iSId, edm::Event& iEvent, const ed
         if (myJet.leadChargedHadrCand().isNonnull()) {
           a = myJet.leadChargedHadrCand()->vertex();
         }
-        // PFTau myPFTau(std::numeric_limits<int>::quiet_NaN(), myJet.p4(), a);
-        if (myJet.pt() > mEt_Min) {
-          edm::Ref<PFTauCollection> jetRef(tauJets, iJet);
-          tauL2jets->push_back(jetRef);
+
+        PFTau myPFTau;
+        if (simplifiedTau) {
+          myPFTau = PFTau(std::numeric_limits<int>::quiet_NaN(), myJet.p4(), a);
+        } else {
+          myPFTau = PFTau(myJet);
+          // myPFTau.setVertex(a);
+        }
+
+        if (myPFTau.pt() > mEt_Min) {
+          tauL2jets->push_back(myJet);
         }
         break;
       }
@@ -68,6 +76,7 @@ void L1THLTTauMatching::fillDescriptions(edm::ConfigurationDescriptions& descrip
   desc.add<edm::InputTag>("JetSrc", edm::InputTag("hltSelectedPFTausTrackPt1MediumIsolationReg"))
       ->setComment("Input collection of PFTaus");
   desc.add<double>("EtMin", 0.0)->setComment("Minimal pT of PFTau to match");
+  desc.add<bool>("SimplifiedTau", true)->setComment("Should produce simplified taus");
   descriptions.setComment(
       "This module produces collection of PFTaus matched to L1 Taus / Jets passing a HLT filter (Only p4 and vertex of "
       "returned PFTaus are set).");
