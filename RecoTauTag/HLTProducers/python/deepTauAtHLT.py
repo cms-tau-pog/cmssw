@@ -146,7 +146,8 @@ def update(process):
 
     process.hltHpsL1JetsHLTForDeepTauInput = process.hltHpsL1JetsHLTDoublePFTauTrackPt1MediumChargedIsolationMatchReg.clone(
         JetSrc = cms.InputTag('hltHpsPFTauProducerReg'),
-        SimplifiedTau = cms.bool(False)
+        ReduceTauContent = cms.bool(False),
+        KeepOriginalVertex = cms.bool(True),
     )
 
     file_names = [
