@@ -26,7 +26,7 @@ namespace deep_tau {
     if (!simple_value) {
       static const std::string prefix =
           "[&](double *x, double *p) { const int decayMode = p[0];"
-          "const double pt = p[1]; const double eta = p[2]; return ";
+          "const double pt = p[1]; const double eta = p[2];";
       static const int n_params = 3;
       static const auto handler = [](int, Bool_t, const char*, const char*) -> void {};
 

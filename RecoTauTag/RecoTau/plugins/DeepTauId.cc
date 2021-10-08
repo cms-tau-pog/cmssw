@@ -1149,7 +1149,6 @@ public:
     desc.add<edm::InputTag>("electrons", edm::InputTag("slimmedElectrons"));
     desc.add<edm::InputTag>("muons", edm::InputTag("slimmedMuons"));
     desc.add<edm::InputTag>("taus", edm::InputTag("slimmedTaus"));
-    desc.add<edm::InputTag>("taus_to_compare", edm::InputTag("default"));
     desc.add<edm::InputTag>("pfcands", edm::InputTag("packedPFCandidates"));
     desc.add<edm::InputTag>("vertices", edm::InputTag("offlineSlimmedPrimaryVertices"));
     desc.add<edm::InputTag>("rho", edm::InputTag("fixedGridRhoAll"));
