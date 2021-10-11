@@ -161,7 +161,7 @@ def update(process):
         return "(((({3}-{2})/({1}-{0}))*(pt-{0}))+{2})".format(x1, x2, y1, y2)
 
     val1, val2 = ("0.49948551", "0.125")
-    working_points = ["return {0}*(pt < 35)+".format(val1)+getLinExpression("35", "300", val1, val2)+ "*(35 <= pt && pt < 300) + {0}*(pt >= 300);".format(val2)]
+    working_points = ["{0}*(pt < 35)+".format(val1)+getLinExpression("35", "300", val1, val2)+ "*(35 <= pt && pt < 300) + {0}*(pt >= 300)".format(val2)]
 
     process.deepTauProducer = DeepTau.clone(
         taus = 'hltHpsL1JetsHLTForDeepTauInput',
