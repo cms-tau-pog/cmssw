@@ -446,8 +446,8 @@ void DeepTauIdSonicProducer::produce(edm::Event& iEvent, edm::EventSetup const& 
     }
 
     if (debug_level >= 2) {
-      for (int i=0; i < 4; ++i) {
-          std::cout << "tau index " << itau_passed << " k " << i << " pred " << pred_all[tau_index][i] << std::endl;
+      for (int i = 0; i < 4; ++i) {
+        std::cout << "tau index " << itau_passed << " k " << i << " pred " << pred_all[tau_index][i] << std::endl;
       }
     }
   }
