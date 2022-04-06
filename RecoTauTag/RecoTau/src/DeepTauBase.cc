@@ -57,35 +57,14 @@ namespace deep_tau {
     return fn_->Eval(0);
   }
 
-  std::unique_ptr<DeepTauBase::TauDiscriminator> DeepTauBase::Output::get_value(const edm::Handle<TauCollection>& taus,
-                                                                                const tensorflow::Tensor& pred,
-                                                                                const WPList* working_points,
-                                                                                bool is_online) const {
-    std::vector<reco::SingleTauDiscriminatorContainer> outputbuffer(taus->size());
+  float DeepTauBase::Output::get_number(const tensorflow::Tensor& pred, size_t tau_index, size_t elem) const {
+    return pred.matrix<float>()(tau_index, elem);
+  }
 
-    for (size_t tau_index = 0; tau_index < taus->size(); ++tau_index) {
-      float x = 0;
-      for (size_t num_elem : num_)
-        x += pred.matrix<float>()(tau_index, num_elem);
-      if (x != 0 && !den_.empty()) {
-        float den_val = 0;
-        for (size_t den_elem : den_)
-          den_val += pred.matrix<float>()(tau_index, den_elem);
-        x = den_val != 0 ? x / den_val : std::numeric_limits<float>::max();
-      }
-      outputbuffer[tau_index].rawValues.push_back(x);
-      if (working_points) {
-        for (const auto& wp : *working_points) {
-          const bool pass = x > (*wp)(taus->at(tau_index), is_online);
-          outputbuffer[tau_index].workingPoints.push_back(pass);
-        }
-      }
-    }
-    std::unique_ptr<TauDiscriminator> output = std::make_unique<TauDiscriminator>();
-    reco::TauDiscriminatorContainer::Filler filler(*output);
-    filler.insert(taus, outputbuffer.begin(), outputbuffer.end());
-    filler.fill();
-    return output;
+  float DeepTauBase::Output::get_number(const std::vector<std::vector<float>>& pred,
+                                        size_t tau_index,
+                                        size_t elem) const {
+    return pred.at(tau_index).at(elem);
   }
 
   DeepTauBase::DeepTauBase(const edm::ParameterSet& cfg,

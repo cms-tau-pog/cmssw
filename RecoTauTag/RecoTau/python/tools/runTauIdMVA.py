@@ -728,10 +728,18 @@ class TauIDEmbedder(object):
                 disable_dxy_pca          = cms.bool(True),
                 is_online                = cms.bool(False)
             ))
+            _deepTauProducer = getattr(self.process,_deepTauName+self.postfix)
+
+            # only implemented Sonic DeepTau for deepTau2017v2p1
+            # if/when implementing for other versions, reduce duplication of setattr(...) lines above
+            from RecoTauTag.RecoTau.deepTauSonicProducer_cff import deepTauSonicProducer as _deepTauSonicProducer
+            from Configuration.ProcessModifiers.deepTauSonicTriton_cff import deepTauSonicTriton
+            deepTauSonicTriton.toReplaceWith(_deepTauProducer, _deepTauSonicProducer.clone(
+                taus = _deepTauProducer.taus,
+            ))
 
             self.processDeepProducer(_deepTauName, tauIDSources, workingPoints_)
 
-            _deepTauProducer = getattr(self.process,_deepTauName+self.postfix)
             _rerunMvaIsolationTask.add(_deepTauProducer)
             _rerunMvaIsolationSequence += _deepTauProducer
 
