@@ -732,7 +732,7 @@ class TauIDEmbedder(object):
 
             # only implemented Sonic DeepTau for deepTau2017v2p1
             # if/when implementing for other versions, reduce duplication of setattr(...) lines above
-            from RecoTauTag.RecoTau.deepTauSonicProducer_cff import deepTauSonicProducer as _deepTauSonicProducer
+            from RecoTauTag.RecoTau.deepTauSonicProducer_cff import deepTauSonicProducer_NoSplit as _deepTauSonicProducer
             from Configuration.ProcessModifiers.deepTauSonicTriton_cff import deepTauSonicTriton
             deepTauSonicTriton.toReplaceWith(_deepTauProducer, _deepTauSonicProducer.clone(
                 taus = _deepTauProducer.taus,
