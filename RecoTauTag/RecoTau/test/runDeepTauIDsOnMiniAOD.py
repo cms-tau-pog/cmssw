@@ -11,11 +11,10 @@ minimalOutput = True
 eventsToProcess = 100
 nThreads = 1
 
-from Configuration.ProcessModifiers.deepTauSonicTriton_cff import deepTauSonicTriton
-
 process = cms.Process('TauID')
 ## removing the following comments if running with SONIC
 ## and comment out the previous line
+#from Configuration.ProcessModifiers.deepTauSonicTriton_cff import deepTauSonicTriton
 #process = cms.Process('TauID', deepTauSonicTriton)
 #process.load("HeterogeneousCore.SonicTriton.TritonService_cff")
 #process.TritonService.verbose = True
@@ -58,8 +57,6 @@ tauIdEmbedder2 = tauIdConfig.TauIDEmbedder(process, debug = False,
                     postfix = postfix, # defaut "", specify non-trivial postfix if tool is run more than one time
                     toKeep = toKeep)
 tauIdEmbedder2.runTauID()
-
-from Configuration.ProcessModifiers.deepTauSonicTriton_cff import deepTauSonicTriton
 
 # Output definition
 process.out = cms.OutputModule("PoolOutputModule",

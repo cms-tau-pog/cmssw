@@ -37,7 +37,6 @@ public:
         disable_dxy_pca_(cfg.getParameter<bool>("disable_dxy_pca")),
         disable_hcalFraction_workaround_(cfg.getParameter<bool>("disable_hcalFraction_workaround")),
         disable_CellIndex_workaround_(cfg.getParameter<bool>("disable_CellIndex_workaround")),
-        doSplitVersion_(cfg.getParameter<bool>("doSplitVersion")),
         outputdiscs_(GetOutputs()) {
     for (const auto& output_desc : outputdiscs_) {
       produces<TauDiscriminator>(output_desc.first);
@@ -122,7 +121,6 @@ private:
   const bool disable_dxy_pca_;
   const bool disable_hcalFraction_workaround_;
   const bool disable_CellIndex_workaround_;
-  const bool doSplitVersion_;
 
   OutputCollection outputdiscs_;
   std::map<std::string, WPList> workingPoints_;
@@ -248,15 +246,9 @@ void DeepTauIdSonicProducer::acquire(edm::Event const& iEvent, edm::EventSetup c
   }
 
   int n_taus = tau_indices_.size();
-  if (doSplitVersion_) {
-    // always set the batch size to 1, since the 'batch' for
-    // deeptau is different with the traditional ones
-    client_->setBatchSize(1);
-  } else {
-    // for the regular non-split deep-tau model, set the
-    // batch size to the number of taus per event
-    client_->setBatchSize(n_taus);
-  }
+  // for the regular non-split deep-tau model, set the
+  // batch size to the number of taus per event
+  client_->setBatchSize(n_taus);
 
   auto& input_tauBlock = iInput.at("input_tau");
   auto& input_innerEgammaBlock = iInput.at("input_inner_egamma");
@@ -266,39 +258,8 @@ void DeepTauIdSonicProducer::acquire(edm::Event const& iEvent, edm::EventSetup c
   auto& input_innerHadronBlock = iInput.at("input_inner_hadrons");
   auto& input_outerHadronBlock = iInput.at("input_outer_hadrons");
 
-  TritonInputData* input_innerGridposBlock = nullptr;
-  TritonInputData* input_outerGridposBlock = nullptr;
-  TritonInputContainer<int64_t> data_innerGridposBlock = nullptr;
-  TritonInputContainer<int64_t> data_outerGridposBlock = nullptr;
   std::vector<int64_t>* p_vdata_innerGridposBlock = nullptr;
   std::vector<int64_t>* p_vdata_outerGridposBlock = nullptr;
-
-  if (doSplitVersion_) {
-    // for inner and outer grids
-    // usually less than 10 inner grids and 50 outer grids per tau
-    // set these numbers temporarily for vector reservation
-    int n_inner_cells = 10 * n_taus;
-    int n_outer_cells = 50 * n_taus;
-    input_tauBlock.setShape(0, n_taus);
-    input_innerEgammaBlock.setShape(0, n_inner_cells);
-    input_outerEgammaBlock.setShape(0, n_outer_cells);
-    input_innerMuonBlock.setShape(0, n_inner_cells);
-    input_outerMuonBlock.setShape(0, n_outer_cells);
-    input_innerHadronBlock.setShape(0, n_inner_cells);
-    input_outerHadronBlock.setShape(0, n_outer_cells);
-
-    // coordinates of the inner grids: n_inner_cells x 3 (i_tau, j_eta, k_phi)
-    input_innerGridposBlock = &(iInput.at("input_inner_pos"));
-    input_innerGridposBlock->setShape(0, n_inner_cells);
-    data_innerGridposBlock = input_innerGridposBlock->allocate<int64_t>();
-    p_vdata_innerGridposBlock = &((*data_innerGridposBlock)[0]);
-
-    // coordinates of the outer grids: n_outer_cells x 3 (i_tau, j_eta, k_phi)
-    input_outerGridposBlock = &(iInput.at("input_outer_pos"));
-    input_outerGridposBlock->setShape(0, n_outer_cells);
-    data_outerGridposBlock = input_outerGridposBlock->allocate<int64_t>();
-    p_vdata_outerGridposBlock = &((*data_outerGridposBlock)[0]);
-  }
 
   auto data_tauBlock = input_tauBlock.allocate<float>();
   auto* p_vdata_tauBlock = &((*data_tauBlock)[0]);
@@ -322,19 +283,16 @@ void DeepTauIdSonicProducer::acquire(edm::Event const& iEvent, edm::EventSetup c
   auto* p_vdata_outerHadronBlock = &((*data_outerHadronBlock)[0]);
 
   for (unsigned itau_passed = 0; itau_passed < tau_indices_.size(); ++itau_passed) {
-    if (!doSplitVersion_) {
-      // for the non-split version,
-      // batch size is not one, needs to go to corresponding itau
-      p_vdata_tauBlock = &((*data_tauBlock)[itau_passed]);
+    // batch size is not one, needs to go to corresponding itau
+    p_vdata_tauBlock = &((*data_tauBlock)[itau_passed]);
 
-      p_vdata_innerEgammaBlock = &((*data_innerEgammaBlock)[itau_passed]);
-      p_vdata_innerMuonBlock = &((*data_innerMuonBlock)[itau_passed]);
-      p_vdata_innerHadronBlock = &((*data_innerHadronBlock)[itau_passed]);
+    p_vdata_innerEgammaBlock = &((*data_innerEgammaBlock)[itau_passed]);
+    p_vdata_innerMuonBlock = &((*data_innerMuonBlock)[itau_passed]);
+    p_vdata_innerHadronBlock = &((*data_innerHadronBlock)[itau_passed]);
 
-      p_vdata_outerEgammaBlock = &((*data_outerEgammaBlock)[itau_passed]);
-      p_vdata_outerMuonBlock = &((*data_outerMuonBlock)[itau_passed]);
-      p_vdata_outerHadronBlock = &((*data_outerHadronBlock)[itau_passed]);
-    }
+    p_vdata_outerEgammaBlock = &((*data_outerEgammaBlock)[itau_passed]);
+    p_vdata_outerMuonBlock = &((*data_outerMuonBlock)[itau_passed]);
+    p_vdata_outerHadronBlock = &((*data_outerHadronBlock)[itau_passed]);
 
     int tau_index = tau_indices_[itau_passed];
     const edm::RefToBase<reco::BaseTau> tauRef = taus->refAt(tau_index);
@@ -356,51 +314,6 @@ void DeepTauIdSonicProducer::acquire(edm::Event const& iEvent, edm::EventSetup c
                                                      p_vdata_outerHadronBlock,
                                                      p_vdata_innerGridposBlock,
                                                      p_vdata_outerGridposBlock);
-  }
-
-  if (doSplitVersion_) {
-    // insert one more set of zeros to calculate the 'ZeroOutputTensor'
-    // i.e., the output from inner/outer network when the input is zero
-    // this tensor will be used to pad the core network for the cells without any particle
-    p_vdata_innerEgammaBlock->insert(
-        p_vdata_innerEgammaBlock->end(), dnn_inputs_2017_v2::EgammaBlockInputs::NumberOfInputs, 0.);
-    p_vdata_innerMuonBlock->insert(
-        p_vdata_innerMuonBlock->end(), dnn_inputs_2017_v2::MuonBlockInputs::NumberOfInputs, 0.);
-    p_vdata_innerHadronBlock->insert(
-        p_vdata_innerHadronBlock->end(), dnn_inputs_2017_v2::HadronBlockInputs::NumberOfInputs, 0.);
-
-    p_vdata_outerEgammaBlock->insert(
-        p_vdata_outerEgammaBlock->end(), dnn_inputs_2017_v2::EgammaBlockInputs::NumberOfInputs, 0.);
-    p_vdata_outerMuonBlock->insert(
-        p_vdata_outerMuonBlock->end(), dnn_inputs_2017_v2::MuonBlockInputs::NumberOfInputs, 0.);
-    p_vdata_outerHadronBlock->insert(
-        p_vdata_outerHadronBlock->end(), dnn_inputs_2017_v2::HadronBlockInputs::NumberOfInputs, 0.);
-
-    // the actual number of inner cells in the event + 1
-    // Note the last element of the Egamma, Muon, and Hadron Block is the zero-paddled vector
-    // for retriving outputs from the inner network when the inputs are zero, which will be
-    // used to paddle the inputs for the core network
-    int n_inner_cells = (p_vdata_innerEgammaBlock->size() / dnn_inputs_2017_v2::EgammaBlockInputs::NumberOfInputs);
-    input_innerEgammaBlock.setShape(0, n_inner_cells);
-    input_innerMuonBlock.setShape(0, n_inner_cells);
-    input_innerHadronBlock.setShape(0, n_inner_cells);
-
-    // the actual number of outer cells in the event + 1
-    // Note the last element of the Egamma, Muon, and Hadron Block is the zero-paddled vector
-    // for retriving outputs from the outer network when the inputs are zero, which will be
-    // used to paddle the inputs for the core network
-    int n_outer_cells = (p_vdata_outerEgammaBlock->size() / dnn_inputs_2017_v2::EgammaBlockInputs::NumberOfInputs);
-    input_outerEgammaBlock.setShape(0, n_outer_cells);
-    input_outerMuonBlock.setShape(0, n_outer_cells);
-    input_outerHadronBlock.setShape(0, n_outer_cells);
-
-    // grid coordinates (i-th tau, j-th eta, k-th phi) of the inner and outer cells
-    // The last element from the inner and outer network is zero-paddled vector
-    // subtract it when setting the Gridpos shape
-    input_innerGridposBlock->setShape(0, n_inner_cells - 1);
-    input_innerGridposBlock->toServer(data_innerGridposBlock);
-    input_outerGridposBlock->setShape(0, n_outer_cells - 1);
-    input_outerGridposBlock->toServer(data_outerGridposBlock);
   }
 
   // tau
@@ -436,14 +349,7 @@ void DeepTauIdSonicProducer::produce(edm::Event& iEvent, edm::EventSetup const& 
   }
   for (unsigned itau_passed = 0; itau_passed < tau_indices_.size(); ++itau_passed) {
     int tau_index = tau_indices_[itau_passed];
-    if (doSplitVersion_) {
-      // the current mode always runs with batchSize of 1
-      std::copy(outputs_tauval[0].begin() + deep_tau::NumberOfOutputs * itau_passed,
-                outputs_tauval[0].begin() + deep_tau::NumberOfOutputs * (itau_passed + 1),
-                pred_all[tau_index].begin());
-    } else {
-      std::copy(outputs_tauval[itau_passed].begin(), outputs_tauval[itau_passed].end(), pred_all[tau_index].begin());
-    }
+    std::copy(outputs_tauval[itau_passed].begin(), outputs_tauval[itau_passed].end(), pred_all[tau_index].begin());
 
     if (debug_level >= 2) {
       for (int i = 0; i < 4; ++i) {
@@ -562,12 +468,8 @@ void DeepTauIdSonicProducer::createConvFeatures(const TauCastType& tau,
                                                 std::vector<int64_t>* p_GridposInputs) {
   // fill in the block inputs with zeros
   int n_cells = 0;
-  if (doSplitVersion_) {
-    n_cells = grid.num_valid_cells();
-  } else {
-    n_cells = is_inner ? (dnn_inputs_2017_v2::number_of_inner_cell * dnn_inputs_2017_v2::number_of_inner_cell)
-                       : (dnn_inputs_2017_v2::number_of_outer_cell * dnn_inputs_2017_v2::number_of_outer_cell);
-  }
+  n_cells = is_inner ? (dnn_inputs_2017_v2::number_of_inner_cell * dnn_inputs_2017_v2::number_of_inner_cell)
+                     : (dnn_inputs_2017_v2::number_of_outer_cell * dnn_inputs_2017_v2::number_of_outer_cell);
 
   unsigned egammaBlockSize = p_egammaBlockInputs->size();
   p_egammaBlockInputs->insert(
@@ -591,8 +493,6 @@ void DeepTauIdSonicProducer::createConvFeatures(const TauCastType& tau,
         std::cout << "processing ( eta = " << eta << ", phi = " << phi << " )" << std::endl;
       }
       const CellIndex cell_index{eta, phi};
-      const int eta_index = grid.getEtaTensorIndex(cell_index);
-      const int phi_index = grid.getPhiTensorIndex(cell_index);
 
       const auto cell_iter = grid.find(cell_index);
       if (cell_iter != grid.end()) {
@@ -617,21 +517,14 @@ void DeepTauIdSonicProducer::createConvFeatures(const TauCastType& tau,
                                                     hadronIter,
                                                     disable_hcalFraction_workaround_);
 
-        if (doSplitVersion_) {
-          p_GridposInputs->push_back(tau_index);
-          p_GridposInputs->push_back(eta_index);
-          p_GridposInputs->push_back(phi_index);
-        }
         idx += 1;
       } else {
         if (debug_level >= 2) {
           std::cout << " skipping creation of inputs, because ( eta = " << eta << ", phi = " << phi
                     << " ) is not in the grid !!" << std::endl;
         }
-        if (!doSplitVersion_) {
-          // for the nonSplitVersion, we need to fill in the zeros for the input tensors
-          idx += 1;
-        }
+        // we need to fill in the zeros for the input tensors
+        idx += 1;
       }
     }
   }
@@ -650,7 +543,6 @@ void DeepTauIdSonicProducer::fillDescriptions(edm::ConfigurationDescriptions& de
   desc.add<bool>("disable_dxy_pca", false);
   desc.add<bool>("disable_hcalFraction_workaround", false);
   desc.add<bool>("disable_CellIndex_workaround", false);
-  desc.add<bool>("doSplitVersion", true);
 
   desc.add<std::vector<std::string>>("VSeWP", {"-1."});
   desc.add<std::vector<std::string>>("VSmuWP", {"-1."});
