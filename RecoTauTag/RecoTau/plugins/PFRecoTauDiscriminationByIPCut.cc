@@ -20,16 +20,15 @@ public:
       : PFTauDiscriminationProducerBase(iConfig),
         m_TausTIPToken(consumes<PFTauTIPAssociationByRef>(iConfig.getParameter<edm::InputTag>("TausIP"))),
         m_tauTIPSelectorString(iConfig.getParameter<std::string>("Cut")),
-        m_tauTIPSelector(m_tauTIPSelectorString)
-       {
-  }
+        m_tauTIPSelector(m_tauTIPSelectorString) {}
   ~PFRecoTauDiscriminationByIPCut() override {}
   void beginEvent(const edm::Event&, const edm::EventSetup&) override;
   double discriminate(const PFTauRef& pfTau) const override;
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
 private:
-  typedef edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef> >       PFTauTIPAssociationByRef;
+  typedef edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef> >
+      PFTauTIPAssociationByRef;
   edm::EDGetTokenT<PFTauTIPAssociationByRef> m_TausTIPToken;
   edm::Handle<PFTauTIPAssociationByRef> TausTIP;
 
@@ -38,7 +37,6 @@ private:
 };
 
 double PFRecoTauDiscriminationByIPCut::discriminate(const PFTauRef& thePFTauRef) const {
-
   return m_tauTIPSelector(*(*TausTIP)[thePFTauRef]) ? 1. : 0.;
 }
 
