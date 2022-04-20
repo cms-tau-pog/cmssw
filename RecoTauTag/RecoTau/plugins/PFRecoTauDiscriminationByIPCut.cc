@@ -18,7 +18,7 @@ class PFRecoTauDiscriminationByIPCut : public PFTauDiscriminationProducerBase {
 public:
   explicit PFRecoTauDiscriminationByIPCut(const edm::ParameterSet& iConfig)
       : PFTauDiscriminationProducerBase(iConfig),
-        tausTIPToken_(consumes<PFTauTIPAssociationByRef>(iConfig.getParameter<edm::InputTag>("TausIP"))),
+        tausTIPToken_(consumes<PFTauTIPAssociationByRef>(iConfig.getParameter<edm::InputTag>("tausTIP"))),
         tauTIPSelectorString_(iConfig.getParameter<std::string>("cut")),
         tauTIPSelector_(tauTIPSelectorString_) {}
   ~PFRecoTauDiscriminationByIPCut() override {}
