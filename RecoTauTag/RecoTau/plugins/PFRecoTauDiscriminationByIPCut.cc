@@ -37,7 +37,7 @@ private:
 };
 
 double PFRecoTauDiscriminationByIPCut::discriminate(const PFTauRef& thePFTauRef) const {
-  return m_tauTIPSelector(*(*tausTIP_)[thePFTauRef]) ? 1. : 0.;
+  return tauTIPSelector_(*(*tausTIP_)[thePFTauRef]) ? 1. : 0.;
 }
 
 void PFRecoTauDiscriminationByIPCut::beginEvent(const edm::Event& event, const edm::EventSetup& eventSetup) {
