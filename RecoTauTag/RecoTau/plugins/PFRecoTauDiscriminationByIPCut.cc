@@ -46,7 +46,7 @@ void PFRecoTauDiscriminationByIPCut::beginEvent(const edm::Event& event, const e
 
 void PFRecoTauDiscriminationByIPCut::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
-  desc.add<edm::InputTag>("TausIP", edm::InputTag("hltTauIPCollection"));
+  desc.add<edm::InputTag>("tausTIP", edm::InputTag("hltTauIPCollection"));
   desc.add<std::string>("cut", "abs(dxy) > -999.");
   {
     edm::ParameterSetDescription psd0;
