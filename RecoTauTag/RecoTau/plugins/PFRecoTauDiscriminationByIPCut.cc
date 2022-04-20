@@ -29,32 +29,32 @@ public:
 private:
   typedef edm::AssociationVector<reco::PFTauRefProd, std::vector<reco::PFTauTransverseImpactParameterRef> >
       PFTauTIPAssociationByRef;
-  edm::EDGetTokenT<PFTauTIPAssociationByRef> m_TausTIPToken;
-  edm::Handle<PFTauTIPAssociationByRef> TausTIP;
+  edm::EDGetTokenT<PFTauTIPAssociationByRef> tausTIPToken_;
+  edm::Handle<PFTauTIPAssociationByRef> tausTIP_;
 
-  const std::string m_tauTIPSelectorString;
-  const StringCutObjectSelector<reco::PFTauTransverseImpactParameter> m_tauTIPSelector;
+  const std::string tauTIPSelectorString_;
+  const StringCutObjectSelector<reco::PFTauTransverseImpactParameter> tauTIPSelector_;
 };
 
 double PFRecoTauDiscriminationByIPCut::discriminate(const PFTauRef& thePFTauRef) const {
-  return m_tauTIPSelector(*(*TausTIP)[thePFTauRef]) ? 1. : 0.;
+  return m_tauTIPSelector(*(*tausTIP_)[thePFTauRef]) ? 1. : 0.;
 }
 
 void PFRecoTauDiscriminationByIPCut::beginEvent(const edm::Event& event, const edm::EventSetup& eventSetup) {
-  event.getByToken(m_TausTIPToken, TausTIP);
+  event.getByToken(tausTIPToken_, tausTIP_);
 }
 
 void PFRecoTauDiscriminationByIPCut::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("TausIP", edm::InputTag("hltTauIPCollection"));
-  desc.add<std::string>("Cut", "abs(dxy) > -999.");
+  desc.add<std::string>("cut", "abs(dxy) > -999.");
   {
     edm::ParameterSetDescription psd0;
     psd0.add<std::string>("BooleanOperator", "and");
     desc.add<edm::ParameterSetDescription>("Prediscriminants", psd0);
   }
   desc.add<edm::InputTag>("PFTauProducer", edm::InputTag("pfRecoTauProducer"));
-  descriptions.add("pfRecoTauDiscriminationByIPCut", desc);
+  descriptions.addWithDefaultLabel(desc);
 }
 
 DEFINE_FWK_MODULE(PFRecoTauDiscriminationByIPCut);
