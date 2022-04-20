@@ -20,7 +20,7 @@ public:
       : PFTauDiscriminationProducerBase(iConfig),
         tausTIPToken_(consumes<PFTauTIPAssociationByRef>(iConfig.getParameter<edm::InputTag>("TausIP"))),
         tauTIPSelectorString_(iConfig.getParameter<std::string>("cut")),
-        tauTIPSelector_(m_tauTIPSelectorString) {}
+        tauTIPSelector_(tauTIPSelectorString_) {}
   ~PFRecoTauDiscriminationByIPCut() override {}
   void beginEvent(const edm::Event&, const edm::EventSetup&) override;
   double discriminate(const PFTauRef& pfTau) const override;
