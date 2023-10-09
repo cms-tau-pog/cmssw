@@ -12,7 +12,16 @@ eventsToProcess = 100
 nThreads = 1
 phase2 = False
 
-process = cms.Process('TauID')
+useSONIC = False
+
+if not useSONIC:
+    process = cms.Process('TauID')
+else:
+    from Configuration.ProcessModifiers.deepTauSonicTriton_cff import deepTauSonicTriton
+    process = cms.Process('TauID', deepTauSonicTriton)
+    process.load("HeterogeneousCore.SonicTriton.TritonService_cff")
+    process.TritonService.verbose = True
+    process.TritonService.fallback.enable = True
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
