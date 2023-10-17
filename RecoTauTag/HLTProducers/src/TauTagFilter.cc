@@ -17,9 +17,6 @@
 #include "HLTrigger/HLTcore/interface/HLTFilter.h"
 #include "RecoTauTag/RecoTau/interface/TauWPThreshold.h"
 
-namespace {
-}
-
 class TauTagFilter : public HLTFilter {
 public:
   using TauCollection = reco::PFJetCollection;
@@ -50,11 +47,12 @@ public:
     desc.add<int>("nExpected", 2)->setComment("number of expected taus per event");
     desc.add<edm::InputTag>("taus", edm::InputTag(""))->setComment("input collection of taus");
     desc.add<edm::InputTag>("tauTags", edm::InputTag(""))->setComment("input collection of tau tagger scores");
-    desc.add<edm::InputTag>("tauPtCorr", edm::InputTag(""))->setComment("input collection of multiplicative tau pt corrections");
+    desc.add<edm::InputTag>("tauPtCorr", edm::InputTag(""))
+        ->setComment("input collection of multiplicative tau pt corrections");
     desc.add<edm::InputTag>("seeds", edm::InputTag(""))->setComment("input collection of seeds");
     desc.add<std::vector<int>>("seedTypes",
-                               { trigger::TriggerL1Tau, trigger::TriggerL1Jet,
-                                 trigger::TriggerTau, trigger::TriggerJet })->setComment("list of seed object types");
+                               {trigger::TriggerL1Tau, trigger::TriggerL1Jet, trigger::TriggerTau, trigger::TriggerJet})
+        ->setComment("list of seed object types");
     desc.add<std::string>("selection", "0")->setComment("selection formula");
     desc.add<double>("minPt", 20)->setComment("minimal tau pt");
     desc.add<double>("maxEta", 2.5)->setComment("maximal tau abs(eta)");
@@ -76,24 +74,24 @@ public:
     const auto& taus = *tausHandle;
 
     std::vector<LorentzVectorM> seed_p4s;
-    if(matchWithSeeds_) {
+    if (matchWithSeeds_) {
       const auto& seeds = event.get(seedsSrc_);
       for (const int seedType : seedTypes_) {
-        if(seedType == trigger::TriggerL1Tau) {
+        if (seedType == trigger::TriggerL1Tau) {
           extractMomenta<l1t::TauVectorRef>(seeds, seedType, seed_p4s);
-        } else if(seedType == trigger::TriggerL1Jet) {
+        } else if (seedType == trigger::TriggerL1Jet) {
           extractMomenta<l1t::JetVectorRef>(seeds, seedType, seed_p4s);
-        } else if(seedType == trigger::TriggerTau) {
+        } else if (seedType == trigger::TriggerTau) {
           extractMomenta<std::vector<reco::PFTauRef>>(seeds, seedType, seed_p4s);
-        } else if(seedType == trigger::TriggerJet) {
+        } else if (seedType == trigger::TriggerJet) {
           extractMomenta<std::vector<reco::PFJetRef>>(seeds, seedType, seed_p4s);
         } else
           throw cms::Exception("Invalid seed type", "PNetTauTagFilter::hltFilter") << "Invalid seed type: " << seedType;
       }
     }
     auto hasMatch = [&](const LorentzVectorM& p4) {
-      for(const auto& seed_p4 : seed_p4s) {
-        if(reco::deltaR2(p4, seed_p4) < matchingdR2_)
+      for (const auto& seed_p4 : seed_p4s) {
+        if (reco::deltaR2(p4, seed_p4) < matchingdR2_)
           return true;
       }
       return false;
@@ -112,7 +110,7 @@ public:
     for (size_t tau_idx = 0; tau_idx < taus.size(); ++tau_idx) {
       const auto& tau = taus[tau_idx];
       double pt = tau.pt();
-      if(usePtCorr_)
+      if (usePtCorr_)
         pt *= (*tauPtCorr)[tau_idx].second;
       const double eta = std::abs(tau.eta());
       if (pt > minPt_ && eta < maxEta_ && (!matchWithSeeds_ || hasMatch(tau.polarP4()))) {
@@ -129,15 +127,15 @@ public:
   }
 
 private:
-  template<typename Collection>
-  static void extractMomenta(const trigger::TriggerRefsCollections& triggerObjects, int objType,
+  template <typename Collection>
+  static void extractMomenta(const trigger::TriggerRefsCollections& triggerObjects,
+                             int objType,
                              std::vector<LorentzVectorM>& p4s) {
     Collection objects;
     triggerObjects.getObjects(objType, objects);
     for (const auto& obj : objects)
       p4s.push_back(obj->polarP4());
   }
-
 
 private:
   const int nExpected_;
