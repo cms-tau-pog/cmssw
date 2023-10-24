@@ -38,8 +38,13 @@ public:
         minPt_(cfg.getParameter<double>("minPt")),
         maxEta_(cfg.getParameter<double>("maxEta")),
         usePtCorr_(cfg.getParameter<bool>("usePtCorr")),
-        matchWithSeeds_(cfg.getParameter<bool>("matchWithSeeds")),
-        matchingdR2_(std::pow(cfg.getParameter<double>("matchingdR"), 2)) {}
+        matchWithSeeds_(cfg.getParameter<bool>("matchWithSeeds") && cfg.getParameter<double>("matchingdR") >= 0),
+        matchingdR2_(std::pow(cfg.getParameter<double>("matchingdR"), 2)) {
+    if (cfg.getParameter<bool>("matchWithSeeds") && cfg.getParameter<double>("matchingdR") < 0)
+      edm::LogWarning("TauTagFilter") << "Matching with seeds is disabled because matchingdR < 0";
+
+    extractMomenta();  // checking that all seed types are supported
+  }
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     edm::ParameterSetDescription desc;
@@ -73,22 +78,7 @@ public:
     const auto tausHandle = event.getHandle(tausToken_);
     const auto& taus = *tausHandle;
 
-    std::vector<LorentzVectorM> seed_p4s;
-    if (matchWithSeeds_) {
-      const auto& seeds = event.get(seedsSrc_);
-      for (const int seedType : seedTypes_) {
-        if (seedType == trigger::TriggerL1Tau) {
-          extractMomenta<l1t::TauVectorRef>(seeds, seedType, seed_p4s);
-        } else if (seedType == trigger::TriggerL1Jet) {
-          extractMomenta<l1t::JetVectorRef>(seeds, seedType, seed_p4s);
-        } else if (seedType == trigger::TriggerTau) {
-          extractMomenta<std::vector<reco::PFTauRef>>(seeds, seedType, seed_p4s);
-        } else if (seedType == trigger::TriggerJet) {
-          extractMomenta<std::vector<reco::PFJetRef>>(seeds, seedType, seed_p4s);
-        } else
-          throw cms::Exception("Invalid seed type", "PNetTauTagFilter::hltFilter") << "Invalid seed type: " << seedType;
-      }
-    }
+    const std::vector<LorentzVectorM> seed_p4s = extractMomenta(&event);
     auto hasMatch = [&](const LorentzVectorM& p4) {
       for (const auto& seed_p4 : seed_p4s) {
         if (reco::deltaR2(p4, seed_p4) < matchingdR2_)
@@ -117,7 +107,7 @@ public:
         const double tag = tauTags[tau_idx].second;
         const double tag_thr = selector_(tau);
         if (tag > tag_thr) {
-          filterproduct.addObject(nTauPassed, TauRef(tausHandle, tau_idx));
+          filterproduct.addObject(trigger::TriggerTau, TauRef(tausHandle, tau_idx));
           nTauPassed++;
         }
       }
@@ -127,14 +117,39 @@ public:
   }
 
 private:
+  std::vector<LorentzVectorM> extractMomenta(const edm::Event* event = nullptr) const {
+    std::vector<LorentzVectorM> seed_p4s;
+    if (matchWithSeeds_) {
+      const trigger::TriggerFilterObjectWithRefs* seeds = nullptr;
+      if (event)
+        seeds = &event->get(seedsSrc_);
+      for (const int seedType : seedTypes_) {
+        if (seedType == trigger::TriggerL1Tau) {
+          extractMomenta<l1t::TauVectorRef>(seeds, seedType, seed_p4s);
+        } else if (seedType == trigger::TriggerL1Jet) {
+          extractMomenta<l1t::JetVectorRef>(seeds, seedType, seed_p4s);
+        } else if (seedType == trigger::TriggerTau) {
+          extractMomenta<std::vector<reco::PFTauRef>>(seeds, seedType, seed_p4s);
+        } else if (seedType == trigger::TriggerJet) {
+          extractMomenta<std::vector<reco::PFJetRef>>(seeds, seedType, seed_p4s);
+        } else
+          throw cms::Exception("Invalid seed type", "PNetTauTagFilter::hltFilter")
+              << "Unsupported seed type: " << seedType;
+      }
+    }
+    return seed_p4s;
+  }
+
   template <typename Collection>
-  static void extractMomenta(const trigger::TriggerRefsCollections& triggerObjects,
+  static void extractMomenta(const trigger::TriggerRefsCollections* triggerObjects,
                              int objType,
                              std::vector<LorentzVectorM>& p4s) {
-    Collection objects;
-    triggerObjects.getObjects(objType, objects);
-    for (const auto& obj : objects)
-      p4s.push_back(obj->polarP4());
+    if (triggerObjects) {
+      Collection objects;
+      triggerObjects->getObjects(objType, objects);
+      for (const auto& obj : objects)
+        p4s.push_back(obj->polarP4());
+    }
   }
 
 private:
