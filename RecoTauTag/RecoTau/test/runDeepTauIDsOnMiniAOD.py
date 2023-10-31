@@ -22,6 +22,8 @@ else:
     process.load("HeterogeneousCore.SonicTriton.TritonService_cff")
     process.TritonService.verbose = True
     process.TritonService.fallback.enable = True
+    # change to True if want to use GPU
+    process.TritonService.fallback.useGPU = False
 process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
