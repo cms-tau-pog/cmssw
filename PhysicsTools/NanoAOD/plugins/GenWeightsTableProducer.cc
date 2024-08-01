@@ -865,8 +865,8 @@ public:
             }
           } else if (std::regex_search(lines[iLine], groups, rwgt)) {
             std::string rwgtID = groups.str(1);
-            // if (!(rwgtID == "sm_weight" || rwgtID == "ps_weight" || rwgtID == "mm_weight"))
-            if (!(  rwgtID ==  "h_tb"  || rwgtID == "h_t"  || rwgtID == "h_b"  || rwgtID == "A_tb"  || rwgtID == "A_t"  || rwgtID == "A_b" ))
+            if (!(rwgtID == "sm_weight" || rwgtID == "ps_weight" || rwgtID == "mm_weight"))
+            //if (!(  rwgtID ==  "h_tb"  || rwgtID == "h_t"  || rwgtID == "h_b"  || rwgtID == "A_tb"  || rwgtID == "A_t"  || rwgtID == "A_b" ))
              continue;
             if (lheDebug)
               std::cout << "    >>> LHE reweighting weight for Powheg: " << rwgtID << std::endl;
