@@ -863,6 +863,17 @@ public:
                 }
               }
             }
+          } else if (std::regex_search(lines[iLine], groups, rwgt)) {
+            std::string rwgtID = groups.str(1);
+            // if (!(rwgtID == "sm_weight" || rwgtID == "ps_weight" || rwgtID == "mm_weight"))
+            if (!(  rwgtID ==  "h_tb"  || rwgtID == "h_t"  || rwgtID == "h_b"  || rwgtID == "A_tb"  || rwgtID == "A_t"  || rwgtID == "A_b" ))
+             continue;
+            if (lheDebug)
+              std::cout << "    >>> LHE reweighting weight for Powheg: " << rwgtID << std::endl;
+            if (std::find(lheReweighingIDs.begin(), lheReweighingIDs.end(), rwgtID) == lheReweighingIDs.end()) {
+              // we're only interested in the beggining of the block
+              lheReweighingIDs.emplace_back(rwgtID);
+            }
           }
         }
         //std::cout << "============= END [ " << iter->tag() << " ] ============ \n\n" << std::endl;
