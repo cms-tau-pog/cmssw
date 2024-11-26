@@ -13,7 +13,7 @@ from PhysicsTools.PatAlgos.patTauSignalCandidatesProducer_cfi import patTauSigna
 
 # Original DeepTau v2p5 in 12_4_X doesn't include WPs in MINIAOD
 # Import thresholds here to define WPs manually from raw scores
-from RecoTauTag.RecoTau.tauIdWPsDefs import WORKING_POINTS_v2p5
+from RecoTauTag.RecoTau.tauIdWPsDefs import WORKING_POINTS_v2p5, WORKING_POINTS_PNet
 
 finalTaus = cms.EDFilter("PATTauRefSelector",
     src = cms.InputTag("slimmedTaus"),
@@ -99,6 +99,18 @@ _UTagCHS = cms.PSet(
     rawPNetVSe = Var("?isTauIDAvailable('byUTagCHSVSeraw')?tauID('byUTagCHSVSeraw'):-1", float, doc="raw output of ParticleNetVsE discriminator (PNet 2023 - CHS Jets)", precision=10),
     rawPNetVSmu = Var("?isTauIDAvailable('byUTagCHSVSmuraw')?tauID('byUTagCHSVSmuraw'):-1", float, doc="raw output of ParticleNetVsMu discriminator (PNet 2023 - CHS Jets)", precision=10),
     rawPNetVSjet = Var("?isTauIDAvailable('byUTagCHSVSjetraw')?tauID('byUTagCHSVSjetraw'):-1", float, doc="raw output of ParticleNetVsJet discriminator (PNet 2023 - CHS Jets)", precision=10),
+    idPNetVSe = _tauIdWPMask("by%sUTagCHSVSe",
+                                            choices=("VVVLoose","VVLoose","VLoose","Loose","Medium","Tight","VTight","VVTight"),
+                                            doc="by%sUTagCHSVSe ID working points (ParticleNet CHS Jets)",
+                                            from_raw=True, wp_thrs=WORKING_POINTS_PNet["e"]),
+    idPNetVSmu = _tauIdWPMask("by%sUTagCHSVSmu",
+                                            choices=("Tight",),
+                                            doc="by%sUTagCHSVSmu ID working points (ParticleNet CHS Jets)",
+                                            from_raw=True, wp_thrs=WORKING_POINTS_PNet["mu"]),
+    idPNetVSjet = _tauIdWPMask("by%sUTagCHSVSjet",
+                                            choices=("VVVLoose","VVLoose","VLoose","Loose","Medium","Tight","VTight","VVTight"),
+                                            doc="by%sUTagCHSVSjet ID working points (ParticleNet CHS Jets)",
+                                            from_raw=True, wp_thrs=WORKING_POINTS_PNet["jet"]),                                            
     ptCorrPNet = Var("?isTauIDAvailable('byUTagCHSPtCorr')?tauID('byUTagCHSPtCorr'):1", float, doc="pt correction (PNet 2023 - CHS Jets)", precision=10),
     qConfPNet = Var("?isTauIDAvailable('byUTagCHSQConf')?tauID('byUTagCHSQConf'):0", float, doc="signed charge confidence (PNet 2023 - CHS Jets)", precision=10),
     probDM0PNet = Var("?isTauIDAvailable('byUTagCHSProb1h0pi0')?tauID('byUTagCHSProb1h0pi0'):-1", float, doc="normalised probablity of decayMode 0, 1h+0pi0 (PNet 2023 - CHS Jets)", precision=10),
