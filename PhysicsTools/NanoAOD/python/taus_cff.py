@@ -33,9 +33,11 @@ def _tauIdWPMask(pattern, choices, doc="", from_raw=False, wp_thrs=None):
             var_definition.append(wp_definition)
         var_definition = " + ".join(var_definition)
         var_definition = ("?isTauIDAvailable('%s')?(" % pattern) + var_definition + "):0"
+        print(var_definition)
     else:
         var_definition = " + ".join(["tauID('%s')" % (pattern % c) for c in choices])
         var_definition = ("?isTauIDAvailable('%s')?(" % (pattern % choices[0])) + var_definition + "):0"
+        print(var_definition)
 
     doc = doc + ": "+", ".join(["%d = %s" % (i,c) for (i,c) in enumerate(choices, start=1)])
     return Var(var_definition, "uint8", doc=doc)
@@ -99,15 +101,15 @@ _UTagCHS = cms.PSet(
     rawPNetVSe = Var("?isTauIDAvailable('byUTagCHSVSeraw')?tauID('byUTagCHSVSeraw'):-1", float, doc="raw output of ParticleNetVsE discriminator (PNet 2023 - CHS Jets)", precision=10),
     rawPNetVSmu = Var("?isTauIDAvailable('byUTagCHSVSmuraw')?tauID('byUTagCHSVSmuraw'):-1", float, doc="raw output of ParticleNetVsMu discriminator (PNet 2023 - CHS Jets)", precision=10),
     rawPNetVSjet = Var("?isTauIDAvailable('byUTagCHSVSjetraw')?tauID('byUTagCHSVSjetraw'):-1", float, doc="raw output of ParticleNetVsJet discriminator (PNet 2023 - CHS Jets)", precision=10),
-    idPNetVSe = _tauIdWPMask("UTagCHSVSe",
+    idPNetVSe = _tauIdWPMask("byUTagCHSVSeraw",
                                             choices=("VVVLoose","VVLoose","VLoose","Loose","Medium","Tight","VTight","VVTight"),
                                             doc="ParticleNetVsE ID working points (PNet 2023 - CHS Jets)",
                                             from_raw=True, wp_thrs=WORKING_POINTS_PNet["e"]),
-    idPNetVSmu = _tauIdWPMask("UTagCHSVSmu",
+    idPNetVSmu = _tauIdWPMask("byUTagCHSVSmuraw",
                                             choices=("Tight",),
                                             doc="ParticleNetVsMu ID working points (PNet 2023 - CHS Jets)",
                                             from_raw=True, wp_thrs=WORKING_POINTS_PNet["mu"]),
-    idPNetVSjet = _tauIdWPMask("UTagCHSVSjet",
+    idPNetVSjet = _tauIdWPMask("byUTagCHSVSjetraw",
                                             choices=("VVVLoose","VVLoose","VLoose","Loose","Medium","Tight","VTight","VVTight"),
                                             doc="ParticleNetVsJet ID working points (PNet 2023 - CHS Jets)",
                                             from_raw=True, wp_thrs=WORKING_POINTS_PNet["jet"]),                                            
