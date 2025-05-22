@@ -269,7 +269,7 @@ void TriggerObjectTableProducer::produce(edm::Event &iEvent, const edm::EventSet
   std::vector<float> pt(nobj, 0), eta(nobj, 0), phi(nobj, 0), l1pt(nobj, 0), l1pt_2(nobj, 0), l2pt(nobj, 0);
   std::vector<int16_t> l1charge(nobj, 0);
   std::vector<uint16_t> id(nobj, 0);
-  std::vector<int> bits(nobj, 0);
+  std::vector<uint64_t> bits(nobj, 0);
   std::vector<int> l1iso(nobj, 0);
   for (unsigned int i = 0; i < nobj; ++i) {
     const auto &obj = *selected[i].first;
