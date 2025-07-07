@@ -208,10 +208,10 @@ namespace nanoaod {
         return table.int32s_;
       else if constexpr (std::is_same<T, uint32_t>())
         return table.uint32s_;
-      else if constexpr (std::is_same<StorageT, int64_t>())
+      else if constexpr (std::is_same<T, int64_t>())
         return table.int64s_;
-      else if constexpr (std::is_same<StorageT, uint64_t>())
-        return table.uint64s_
+      else if constexpr (std::is_same<T, uint64_t>())
+        return table.uint64s_;
       else if constexpr (std::is_same<T, bool>())
         return table.uint8s_;  // special case: bool stored as vector of uint8
       else if constexpr (std::is_same<T, float>())
