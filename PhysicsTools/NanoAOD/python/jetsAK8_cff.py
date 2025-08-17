@@ -82,7 +82,7 @@ finalJetsAK8 = cms.EDFilter("PATJetRefSelector",
 
 
 lepInAK8JetVars = cms.EDProducer("LepInJetProducer",
-    src = cms.InputTag("finalJetsAK8"),
+    src = cms.InputTag("updatedJetsAK8WithUserData"),
     srcEle = cms.InputTag("finalElectrons"),
     srcMu = cms.InputTag("finalMuons")
 )
