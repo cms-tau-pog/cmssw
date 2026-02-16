@@ -12,6 +12,7 @@
 <use name="PhysicsTools/JetMCUtils"/>
 <use name="RecoTauTag/RecoTau"/>
 <use name="DataFormats/PatCandidates"/>
+<use name="DataFormats/HLTReco"/>
 <library file="*.cc" name="ValidationRecoTauPlugin">
   <flags EDM_PLUGIN="1"/>
 </library>
