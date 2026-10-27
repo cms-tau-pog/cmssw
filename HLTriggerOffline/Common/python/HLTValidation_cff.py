@@ -40,7 +40,6 @@ hgcalHitCalibrationHLT = _hgcalHitCalibrationDefault.clone(
 # HGCAL validation
 from Validation.HGCalValidation.HLTHGCalValidator_cff import *
 from SimCalorimetry.TICLSimProducers.HLTSimTracksters_cff import *
-from RecoHGCal.TICL.HLTSimTracksters_cff import *
 from Validation.RecoTau.ticlTauValidation_cfi import *
 
 # offline dqm:
