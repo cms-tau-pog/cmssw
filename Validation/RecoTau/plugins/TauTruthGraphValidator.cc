@@ -27,6 +27,9 @@
 #include "DataFormats/TauReco/interface/PFTau.h"
 #include "DataFormats/TauReco/interface/PFTauFwd.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
+#include "DataFormats/ParticleFlowReco/interface/PFCluster.h"
+#include "DataFormats/ParticleFlowReco/interface/PFBlock.h"
 #include "DataFormats/HGCalReco/interface/Trackster.h"
 #include "DataFormats/HGCalReco/interface/TICLCandidate.h"
 #include "DataFormats/Common/interface/Ptr.h"
@@ -36,9 +39,13 @@
 #include "DataFormats/HLTReco/interface/TriggerObject.h"
 #include "DataFormats/HLTReco/interface/TriggerFilterObjectWithRefs.h"
 
-#include "SimDataFormats/CaloAnalysis/interface/SimTauCPLink.h"
+#include "SimDataFormats/TruthInfo/interface/Graph.h"
 #include "SimDataFormats/CaloAnalysis/interface/CaloParticle.h"
 #include "SimDataFormats/Associations/interface/TICLAssociationMap.h"
+
+namespace {
+  using BranchMap = ticl::TICLAssociationMap<ticl::mapWithSharedEnergyAndScore>;
+}
 
 class TauTruthGraphValidator : public DQMEDAnalyzer {
 public:
@@ -50,13 +57,24 @@ private:
   void bookHistograms(DQMStore::IBooker&, edm::Run const&, edm::EventSetup const&) override;
   void analyze(const edm::Event&, const edm::EventSetup&) override;
 
+  edm::EDGetTokenT<truth::Graph> graphToken_;
   edm::EDGetTokenT<reco::PFTauCollection> hpsTauToken_;
   std::string folder_;
+
+  edm::EDGetTokenT<reco::PFClusterCollection> ecalClustersToken_;
+  edm::EDGetTokenT<BranchMap> ecalMapToken_;
+  edm::EDGetTokenT<reco::PFClusterCollection> hcalClustersToken_;
+  edm::EDGetTokenT<BranchMap> hcalMapToken_;
 };
 
 TauTruthGraphValidator::TauTruthGraphValidator(const edm::ParameterSet& iConfig)
   : folder_(iConfig.getParameter<std::string>("folder")) {
+  graphToken_ = consumes<truth::Graph>(iConfig.getParameter<edm::InputTag>("graphToken"));
   hpsTauToken_ = consumes<reco::PFTauCollection>(iConfig.getParameter<edm::InputTag>("hpsTauToken"));
+  ecalClustersToken_ = consumes<reco::PFClusterCollection>(iConfig.getParameter<edm::InputTag>("ecalClustersToken"));
+  ecalMapToken_ = consumes<BranchMap>(iConfig.getParameter<edm::InputTag>("ecalMapToken"));
+  hcalClustersToken_ = consumes<reco::PFClusterCollection>(iConfig.getParameter<edm::InputTag>("hcalClustersToken"));
+  hcalMapToken_ = consumes<BranchMap>(iConfig.getParameter<edm::InputTag>("hcalMapToken"));
 }
 
 void TauTruthGraphValidator::bookHistograms(DQMStore::IBooker& ibook, edm::Run const&, edm::EventSetup const&) {
@@ -67,6 +85,16 @@ void TauTruthGraphValidator::bookHistograms(DQMStore::IBooker& ibook, edm::Run c
 void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventSetup&) {
   edm::Handle<reco::PFTauCollection> hpsTaus;
   iEvent.getByToken(hpsTauToken_, hpsTaus);
+  edm::Handle<truth::Graph> graph;
+  iEvent.getByToken(graphToken_, graph);
+  edm::Handle<reco::PFClusterCollection> ecalClusters;
+  iEvent.getByToken(ecalClustersToken_, ecalClusters);
+  edm::Handle<BranchMap> ecalMap;
+  iEvent.getByToken(ecalMapToken_, ecalMap);
+  edm::Handle<reco::PFClusterCollection> hcalClusters;
+  iEvent.getByToken(hcalClustersToken_, hcalClusters);
+  edm::Handle<BranchMap> hcalMap;
+  iEvent.getByToken(hcalMapToken_, hcalMap);
 
   if (!hpsTaus.isValid()) {
     std::cout << "hpsTaus invalid collection, skipping event " << iEvent.id();
@@ -74,16 +102,71 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
     return;
   }
 
-  for (const auto& hpsTau : *hpsTaus) {
-    std::cout << "hpsTau.pt() = " << hpsTau.pt() << std::endl;
+  if (!graph.isValid()) {
+    std::cout << "graph invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "graph invalid collection, skipping event " << iEvent.id();
+    return;
   }
 
+  if (!ecalClusters.isValid()) {
+    std::cout << "ecalClusters invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "ecalClusters invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+
+  if (!hcalClusters.isValid()) {
+    std::cout << "hcalClusters invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "hcalClusters invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+
+  if (!ecalMap.isValid()) {
+    std::cout << "ecalMap invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "ecalMap invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+
+  if (!hcalMap.isValid()) {
+    std::cout << "hcalMap invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "hcalMap invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+
+  for (const auto& hpsTau : *hpsTaus) {
+    std::cout << "hpsTau.pt() = " << hpsTau.pt() << std::endl;
+    const auto PFCands = hpsTau.signalPFCands();
+    for (const auto& pfCand : PFCands) {
+      for (auto const& [block, index] : pfCand->elementsInBlocks()) {
+        auto const& element = block->elements()[index];
+        auto const cluster = element.clusterRef();
+        if (cluster.isNull()) {
+          continue;
+        }
+        if (cluster.id() == ecalClusters.id()) {
+          std::cout << "pfCand.pt() = " << pfCand->pt() << std::endl;
+          for (auto const& assoc : (*ecalMap)[cluster.key()]) {
+            std::cout << "  -> index " << assoc.index()
+              << " sharedEnergy = " << assoc.sharedEnergy()
+              << " score = " << assoc.score() << std::endl;
+          }
+        }
+      }
+    }
+  }
 }
+
 
 void TauTruthGraphValidator::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("hpsTauToken", edm::InputTag("hltHpsPFTauProducer"));
   desc.add<std::string>("folder", "RecoTauV/TruthGraphTauValidator");
+  desc.add<edm::InputTag>("graphToken", edm::InputTag("hltTruthGraphProducer"));
+  desc.add<edm::InputTag>("ecalClustersToken", edm::InputTag("hltParticleFlowClusterECALUnseeded"));
+  desc.add<edm::InputTag>(
+      "ecalMapToken", edm::InputTag("truthBranchPFClusterEcalAssociators", "particleFlowClusterECALRecoToTruthFixed"));
+  desc.add<edm::InputTag>("hcalClustersToken", edm::InputTag("hltParticleFlowClusterHCAL"));
+  desc.add<edm::InputTag>(
+      "hcalMapToken", edm::InputTag("truthBranchPFClusterHcalAssociators", "particleFlowClusterHCALRecoToTruthFixed"));
   descriptions.add("TauTruthGraphValidator", desc);
 }
 

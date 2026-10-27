@@ -4,5 +4,7 @@ from Validation.RecoTau.TauTruthGraphValidator_cfi import TauTruthGraphValidator
 # HLT
 hltTauTruthGraphValidation = _TauTruthGraphValidator.clone(
     folder = cms.string("HLT/Tau/TruthGraphTauValidation"),
+    ecalMapToken = cms.InputTag("hltTruthBranchPFClusterEcalAssociators", "hltParticleFlowClusterECALRecoToTruthFixed"),
+    hcalMapToken = cms.InputTag("hltTruthBranchPFClusterHcalAssociators", "hltParticleFlowClusterHCALRecoToTruthFixed")
 )
 
