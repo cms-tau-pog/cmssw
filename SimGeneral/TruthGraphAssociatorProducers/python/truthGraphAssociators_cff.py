@@ -170,7 +170,7 @@ hltTruthBranchTracksterAssociators = truthBranchTracksterAssociators.clone(
     pfRecHits=cms.VInputTag("hltParticleFlowRecHitECALUnseeded", "hltParticleFlowRecHitHBHE"),
 )
 hltTruthBranchPFClusterEcalAssociators = truthBranchPFClusterEcalAssociators.clone(
-    recoCollections=cms.VInputTag("hltParticleFlowClusterECALUnseeded"),
+    recoCollections=cms.VInputTag("hltParticleFlowClusterECAL"),
     pfRecHits=cms.VInputTag("hltParticleFlowRecHitECALUnseeded"),
 )
 hltTruthBranchPFClusterHcalAssociators = truthBranchPFClusterHcalAssociators.clone(
