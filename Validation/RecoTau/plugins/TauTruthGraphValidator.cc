@@ -97,43 +97,43 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
   iEvent.getByToken(hcalMapToken_, hcalMap);
 
   if (!hpsTaus.isValid()) {
-    std::cout << "hpsTaus invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# hpsTaus invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "hpsTaus invalid collection, skipping event " << iEvent.id();
     return;
   }
 
   if (!graph.isValid()) {
-    std::cout << "graph invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# graph invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "graph invalid collection, skipping event " << iEvent.id();
     return;
   }
 
   if (!ecalClusters.isValid()) {
-    std::cout << "ecalClusters invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# ecalClusters invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "ecalClusters invalid collection, skipping event " << iEvent.id();
     return;
   }
 
   if (!hcalClusters.isValid()) {
-    std::cout << "hcalClusters invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# hcalClusters invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "hcalClusters invalid collection, skipping event " << iEvent.id();
     return;
   }
 
   if (!ecalMap.isValid()) {
-    std::cout << "ecalMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# ecalMap invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "ecalMap invalid collection, skipping event " << iEvent.id();
     return;
   }
 
   if (!hcalMap.isValid()) {
-    std::cout << "hcalMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# hcalMap invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "hcalMap invalid collection, skipping event " << iEvent.id();
     return;
   }
 
   for (const auto& hpsTau : *hpsTaus) {
-    std::cout << "hpsTau.pt() = " << hpsTau.pt() << std::endl;
+    std::cout << "############# hpsTau.pt() = " << hpsTau.pt() << "hpsTau.eta() = " << hpsTau.eta()  << std::endl;
     const auto PFCands = hpsTau.signalPFCands();
     for (const auto& pfCand : PFCands) {
       for (auto const& [block, index] : pfCand->elementsInBlocks()) {
@@ -143,12 +143,23 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
           continue;
         }
         if (cluster.id() == ecalClusters.id()) {
-          std::cout << "pfCand.pt() = " << pfCand->pt() << std::endl;
+          std::cout << "############# ECAL pfCand.pt() = " << pfCand->pt() << " pfCand.eta() = " << pfCand->eta() << std::endl;
           for (auto const& assoc : (*ecalMap)[cluster.key()]) {
-            std::cout << "  -> index " << assoc.index()
+            std::cout << "############# index " << assoc.index()
               << " sharedEnergy = " << assoc.sharedEnergy()
               << " score = " << assoc.score() << std::endl;
           }
+        }
+        else if (cluster.id() == hcalClusters.id()) {
+          std::cout << "############# HCAL pfCand.pt() = " << pfCand->pt() << " pfCand.eta() = " << pfCand->eta() << std::endl;
+          for (auto const& assoc : (*hcalMap)[cluster.key()]) {
+            std::cout << "############# index " << assoc.index()
+              << " sharedEnergy = " << assoc.sharedEnergy()
+              << " score = " << assoc.score() << std::endl;
+          }
+        }
+        else {
+          std::cout << "############# HGCAL pfCand.pt() = " << pfCand->pt() << " pfCand.eta() = " << pfCand->eta() << std::endl;
         }
       }
     }
@@ -159,14 +170,12 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
 void TauTruthGraphValidator::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("hpsTauToken", edm::InputTag("hltHpsPFTauProducer"));
-  desc.add<std::string>("folder", "RecoTauV/TruthGraphTauValidator");
-  desc.add<edm::InputTag>("graphToken", edm::InputTag("hltTruthGraphProducer"));
+  desc.add<std::string>("folder", "HLT/Tau/TruthGraphTauValidation");
+  desc.add<edm::InputTag>("graphToken", edm::InputTag("truthLogicalGraphProducer"));
   desc.add<edm::InputTag>("ecalClustersToken", edm::InputTag("hltParticleFlowClusterECALUnseeded"));
-  desc.add<edm::InputTag>(
-      "ecalMapToken", edm::InputTag("truthBranchPFClusterEcalAssociators", "particleFlowClusterECALRecoToTruthFixed"));
+  desc.add<edm::InputTag>("ecalMapToken", edm::InputTag("hltTruthBranchPFClusterEcalAssociators", "hltParticleFlowClusterECALRecoToTruthFixed"));
   desc.add<edm::InputTag>("hcalClustersToken", edm::InputTag("hltParticleFlowClusterHCAL"));
-  desc.add<edm::InputTag>(
-      "hcalMapToken", edm::InputTag("truthBranchPFClusterHcalAssociators", "particleFlowClusterHCALRecoToTruthFixed"));
+  desc.add<edm::InputTag>("hcalMapToken", edm::InputTag("hltTruthBranchPFClusterHcalAssociators","hltParticleFlowClusterHCALRecoToTruthFixed"));
   descriptions.add("TauTruthGraphValidator", desc);
 }
 
