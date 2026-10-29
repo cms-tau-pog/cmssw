@@ -123,3 +123,19 @@ hltTauPostProcessor = DQMEDHarvester("DQMGenericClient",
     verbose = cms.untracked.uint32(2), 
     outputFileName = cms.untracked.string("")
 )
+
+hltTauTruthGraphPostProcessor = DQMEDHarvester("DQMGenericClient",
+    subDirs=cms.untracked.vstring(
+        "HLT/Tau/TruthGraphTauValidation/ECAL",
+        "HLT/Tau/TruthGraphTauValidation/HCAL",
+        "HLT/Tau/TruthGraphTauValidation/HGCAL",
+    ),
+    efficiency = cms.vstring(
+        "Fake_vs_energy 'Fake Rate vs energy' caloObjectFake_energy caloObject_energy",
+        "Fake_vs_eta 'Fake Rate vs #eta' caloObjectFake_eta caloObject_eta",
+        "Fake_vs_pt 'Fake Rate vs p_{T}' caloObjectFake_pt caloObject_pt",
+    ),
+    resolution = cms.vstring(),
+    verbose = cms.untracked.uint32(2),
+    outputFileName = cms.untracked.string("")
+)
