@@ -56,6 +56,7 @@ public:
 private:
   void bookHistograms(DQMStore::IBooker&, edm::Run const&, edm::EventSetup const&) override;
   void analyze(const edm::Event&, const edm::EventSetup&) override;
+  double checkForAncestralTau(const edm::Handle<truth::Graph> graph, const auto& associations);
 
   edm::EDGetTokenT<truth::Graph> graphToken_;
   edm::EDGetTokenT<reco::PFTauCollection> hpsTauToken_;
@@ -73,8 +74,13 @@ private:
 
   struct CaloObjectHistograms {
     MonitorElement* pt = nullptr;
+    MonitorElement* ptFake = nullptr;
+
     MonitorElement* eta = nullptr;
+    MonitorElement* etaFake = nullptr;
+
     MonitorElement* energy = nullptr;
+    MonitorElement* energyFake = nullptr;
   };
 
   CaloObjectHistograms ecalClusterHistograms_;
@@ -102,13 +108,34 @@ void TauTruthGraphValidator::bookHistograms(DQMStore::IBooker& ibook, edm::Run c
   auto bookClusterHistograms = [&](const std::string& subfolder, CaloObjectHistograms& histograms) {
     ibook.setCurrentFolder(folder_ + "/" + subfolder);
     histograms.pt = ibook.book1D("caloObject_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 100, 0., 200.);
+    histograms.ptFake = ibook.book1D("caloObjectFake_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 100, 0., 200.);
+    
     histograms.eta = ibook.book1D("caloObject_eta", "Tau signal calorimeter objects; eta; objects", 100, -5., 5.);
+    histograms.etaFake = ibook.book1D("caloObjectFake_eta", "Tau signal calorimeter objects; eta; objects", 100, -5., 5.);
+    
     histograms.energy = ibook.book1D("caloObject_energy", "Tau signal calorimeter objects; energy [GeV]; objects", 100, 0., 500.);
+    histograms.energyFake = ibook.book1D("caloObjectFake_energy", "Tau signal calorimeter objects; energy [GeV]; objects", 100, 0., 500.);
   };
   bookClusterHistograms("ECAL", ecalClusterHistograms_);
   bookClusterHistograms("HCAL", hcalClusterHistograms_);
   bookClusterHistograms("HGCAL", hgcalClusterHistograms_);
 }
+
+double TauTruthGraphValidator::checkForAncestralTau(const edm::Handle<truth::Graph> graph, const auto& associations) {
+  double score = 2.0;  // defualt score to return if no tau is found
+  for (auto const& assoc : associations) {
+    const auto particleId = assoc.index();
+    if (particleId >= graph->nParticles()) {
+      continue;
+    }
+    auto const& particle = graph->particles()[particleId];
+    if (std::abs(particle.pdgId) == 15) {
+      score = assoc.score();
+      return score;
+    }
+  }    
+  return score;
+};
 
 void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventSetup&) {
   edm::Handle<reco::PFTauCollection> hpsTaus;
@@ -187,7 +214,9 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
     return;
   }
 
-  auto fillCaloObjectHistograms = [&](double energy, const auto& position, CaloObjectHistograms& histograms) {
+  auto fillCaloObjectHistograms = [&](double energy,
+                                                const auto& position,
+                                                CaloObjectHistograms& histograms) {
     const double rho = std::sqrt(position.x() * position.x() + position.y() * position.y());
     const double magnitude = std::sqrt(rho * rho + position.z() * position.z());
     const double pt = magnitude > 0. ? energy * rho / magnitude : 0.;
@@ -196,21 +225,24 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
     histograms.energy->Fill(energy);
   };
 
-  auto printMatchedTruthParticles = [&](const char* detector, std::size_t recoIndex, const auto& associations) {
-    for (auto const& assoc : associations) {
-      const auto particleId = assoc.index();
-      if (particleId >= graph->nParticles()) {
-        continue;
-      }
-      auto const& particle = graph->particles()[particleId];
-      auto const& momentum = particle.momentum;
-      std::cout << "############# " << detector << " recoIndex=" << recoIndex
-                << " matchedTruthParticleId=" << particleId << " pdgId=" << particle.pdgId
-                << " pt=" << momentum.pt() << " eta=" << momentum.eta() << " phi=" << momentum.phi()
-                << " energy=" << momentum.E() << " sharedEnergy=" << assoc.sharedEnergy()
-                << " score=" << assoc.score() << std::endl;
+  auto fillCaloObjectFakeHistograms = [&](double energy,
+                                                    const auto& position,
+                                                    CaloObjectHistograms& histograms,
+                                                    double threshold,
+                                                    const auto& associations) {
+    double tauScore = checkForAncestralTau(graph, associations);
+    if (tauScore > threshold) {
+      std::cout << "############# Found tau with score = " << tauScore << std::endl;
+      const double rho = std::sqrt(position.x() * position.x() + position.y() * position.y());
+      const double magnitude = std::sqrt(rho * rho + position.z() * position.z());
+      const double pt = magnitude > 0. ? energy * rho / magnitude : 0.;
+      histograms.ptFake->Fill(pt);
+      histograms.etaFake->Fill(position.eta());
+      histograms.energyFake->Fill(energy);
     }
   };
+
+  double tauScoreThreshold = 0.1;  // anything above this is considered a fake
 
   for (const auto& hpsTau : *hpsTaus) {
     std::cout << "############# hpsTau.pt() = " << hpsTau.pt() << " hpsTau.eta() = " << hpsTau.eta()  << std::endl;
@@ -225,11 +257,16 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
                 trackster.key() >= hgcalTracksters->size()) {
               continue;
             }
-            const auto tracksterIndex = trackster.key();
-            fillCaloObjectHistograms(trackster->raw_energy(), trackster->barycenter(), hgcalClusterHistograms_);
             std::cout << "############# HGCAL trackster.raw_energy() = " << trackster->raw_energy()
                       << " trackster.eta() = " << trackster->barycenter().eta() << std::endl;
-            printMatchedTruthParticles("HGCAL trackster", tracksterIndex, (*hgcalTracksterMap)[tracksterIndex]);
+            fillCaloObjectHistograms(trackster->raw_energy(),
+                                     trackster->barycenter(),
+                                     hgcalClusterHistograms_);
+            fillCaloObjectFakeHistograms(trackster->raw_energy(),
+                                         trackster->barycenter(),
+                                         hgcalClusterHistograms_,
+                                         tauScoreThreshold,
+                                         (*hgcalTracksterMap)[trackster.key()]);
           }
         }
       }
@@ -241,14 +278,26 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
             continue;
           }
           if (cluster.id() == ecalClusters.id()) {
-            fillCaloObjectHistograms(cluster->energy(), cluster->position(), ecalClusterHistograms_);
             std::cout << "############# ECAL pfCand.pt() = " << pfCand->pt() << " pfCand.eta() = " << pfCand->eta() << std::endl;
-            printMatchedTruthParticles("ECAL", cluster.key(), (*ecalMap)[cluster.key()]);
+            fillCaloObjectHistograms(cluster->energy(),
+                                     cluster->position(),
+                                     ecalClusterHistograms_);
+            fillCaloObjectFakeHistograms(cluster->energy(),
+                                         cluster->position(),
+                                         ecalClusterHistograms_,
+                                         tauScoreThreshold,
+                                         (*ecalMap)[cluster.key()]);
           }
           else if (cluster.id() == hcalClusters.id()) {
-            fillCaloObjectHistograms(cluster->energy(), cluster->position(), hcalClusterHistograms_);
             std::cout << "############# HCAL pfCand.pt() = " << pfCand->pt() << " pfCand.eta() = " << pfCand->eta() << std::endl;
-            printMatchedTruthParticles("HCAL", cluster.key(), (*hcalMap)[cluster.key()]);
+            fillCaloObjectHistograms(cluster->energy(),
+                                     cluster->position(),
+                                     hcalClusterHistograms_);
+            fillCaloObjectFakeHistograms(cluster->energy(),
+                                         cluster->position(),
+                                         hcalClusterHistograms_,
+                                         tauScoreThreshold,
+                                         (*hcalMap)[cluster.key()]);  
           }
         }
       }

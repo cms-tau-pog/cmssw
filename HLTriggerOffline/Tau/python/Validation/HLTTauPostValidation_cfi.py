@@ -15,7 +15,7 @@ HLTTauPostVal = cms.Sequence(
     HLTTauValPostAnalysisPN+HLTTauValPostAnalysisPN2+
     HLTTauValPostAnalysisTP+HLTTauValPostAnalysisTP2
 )
-HLTTauPostValPhase2 = cms.Sequence(hltTauPostProcessor)
+HLTTauPostValPhase2 = cms.Sequence(hltTauPostProcessor + hltTauTruthGraphPostProcessor)
 
 from Configuration.Eras.Modifier_phase2_common_cff import phase2_common
 phase2_common.toReplaceWith(HLTTauPostVal, HLTTauPostValPhase2)
