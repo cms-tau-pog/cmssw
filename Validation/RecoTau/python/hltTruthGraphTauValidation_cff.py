@@ -8,13 +8,16 @@ hltTauTruthGraphValidation = _TauTruthGraphValidator.clone(
     graphToken = cms.InputTag("truthLogicalGraphProducer"),
     ecalMapToken = cms.InputTag("hltTruthBranchPFClusterEcalAssociators", "hltParticleFlowClusterECALRecoToTruthFixed"),
     hcalMapToken = cms.InputTag("hltTruthBranchPFClusterHcalAssociators","hltParticleFlowClusterHCALRecoToTruthFixed"),
+    hgcalTracksterMapToken = cms.InputTag("hltTruthBranchTracksterAssociators", "hltTiclCandidateRecoToTruthFixed"),
     pfCandidatesToken = cms.InputTag("hltParticleFlowTmp"),
     pfCandidatesBarrelToken = cms.InputTag("hltParticleFlowTmpBarrel"),
     ticlCandidatesToken = cms.InputTag("hltTiclCandidate"),
-    hgcalTracksterMapToken = cms.InputTag("hltTruthBranchTracksterAssociators", "hltTiclCandidateRecoToTruthFixed"),
     # Keep clusters collection tags aligned with the HLT associator labels 
     # as in hltTruthBranchPFClusterEcalAssociators and hltTruthBranchPFClusterHcalAssociators.
     ecalClustersToken = cms.InputTag("hltParticleFlowClusterECAL"),
     hcalClustersToken = cms.InputTag("hltParticleFlowClusterHCAL"),
     hgcalTrackstersToken = cms.InputTag("hltTiclCandidate"),
+    ecalTruthToRecoMapToken = cms.InputTag("hltTruthBranchPFClusterEcalAssociators", "hltParticleFlowClusterECALTruthToReco"),
+    hcalTruthToRecoMapToken = cms.InputTag("hltTruthBranchPFClusterHcalAssociators", "hltParticleFlowClusterHCALTruthToReco"),
+    hgcalTracksterTruthToRecoMapToken = cms.InputTag("hltTruthBranchTracksterAssociators", "hltTiclCandidateTruthToReco"),
 )
