@@ -72,6 +72,10 @@ private:
   edm::EDGetTokenT<std::vector<ticl::Trackster>> hgcalTrackstersToken_;
   edm::EDGetTokenT<BranchMap> hgcalTracksterMapToken_;
 
+  edm::EDGetTokenT<BranchMap> ecalTruthToRecoMapToken_;
+  edm::EDGetTokenT<BranchMap> hcalTruthToRecoMapToken_;
+  edm::EDGetTokenT<BranchMap> hgcalTracksterTruthToRecoMapToken_;
+
   struct CaloObjectHistograms {
     MonitorElement* pt = nullptr;
     MonitorElement* ptFake = nullptr;
@@ -101,6 +105,9 @@ TauTruthGraphValidator::TauTruthGraphValidator(const edm::ParameterSet& iConfig)
   ticlCandidatesToken_ = consumes<std::vector<TICLCandidate>>(iConfig.getParameter<edm::InputTag>("ticlCandidatesToken"));
   hgcalTrackstersToken_ = consumes<std::vector<ticl::Trackster>>(iConfig.getParameter<edm::InputTag>("hgcalTrackstersToken"));
   hgcalTracksterMapToken_ = consumes<BranchMap>(iConfig.getParameter<edm::InputTag>("hgcalTracksterMapToken"));
+  ecalTruthToRecoMapToken_ = consumes<BranchMap>(iConfig.getParameter<edm::InputTag>("ecalTruthToRecoMapToken"));
+  hcalTruthToRecoMapToken_ = consumes<BranchMap>(iConfig.getParameter<edm::InputTag>("hcalTruthToRecoMapToken"));
+  hgcalTracksterTruthToRecoMapToken_ = consumes<BranchMap>(iConfig.getParameter<edm::InputTag>("hgcalTracksterTruthToRecoMapToken"));
 }
 
 void TauTruthGraphValidator::bookHistograms(DQMStore::IBooker& ibook, edm::Run const&, edm::EventSetup const&) {
@@ -138,68 +145,36 @@ double TauTruthGraphValidator::checkForAncestralTau(const edm::Handle<truth::Gra
 };
 
 void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventSetup&) {
-  edm::Handle<reco::PFTauCollection> hpsTaus;
-  iEvent.getByToken(hpsTauToken_, hpsTaus);
+  
+  // ——————————————————————————————————————————————————————————————————————————
+  // Common inputs
+  // ——————————————————————————————————————————————————————————————————————————
+  
   edm::Handle<truth::Graph> graph;
   iEvent.getByToken(graphToken_, graph);
-  edm::Handle<reco::PFClusterCollection> ecalClusters;
-  iEvent.getByToken(ecalClustersToken_, ecalClusters);
-  edm::Handle<BranchMap> ecalMap;
-  iEvent.getByToken(ecalMapToken_, ecalMap);
-  edm::Handle<reco::PFClusterCollection> hcalClusters;
-  iEvent.getByToken(hcalClustersToken_, hcalClusters);
-  edm::Handle<BranchMap> hcalMap;
-  iEvent.getByToken(hcalMapToken_, hcalMap);
+  edm::Handle<reco::PFTauCollection> hpsTaus;
+  iEvent.getByToken(hpsTauToken_, hpsTaus);
   edm::Handle<reco::PFCandidateCollection> pfCandidates;
   iEvent.getByToken(pfCandidatesToken_, pfCandidates);
   edm::Handle<reco::PFCandidateCollection> pfCandidatesBarrel;
   iEvent.getByToken(pfCandidatesBarrelToken_, pfCandidatesBarrel);
   edm::Handle<std::vector<TICLCandidate>> ticlCandidates;
   iEvent.getByToken(ticlCandidatesToken_, ticlCandidates);
+  edm::Handle<reco::PFClusterCollection> ecalClusters;
+  iEvent.getByToken(ecalClustersToken_, ecalClusters);
+  edm::Handle<reco::PFClusterCollection> hcalClusters;
+  iEvent.getByToken(hcalClustersToken_, hcalClusters);
   edm::Handle<std::vector<ticl::Trackster>> hgcalTracksters;
   iEvent.getByToken(hgcalTrackstersToken_, hgcalTracksters);
-  edm::Handle<BranchMap> hgcalTracksterMap;
-  iEvent.getByToken(hgcalTracksterMapToken_, hgcalTracksterMap);
-
-  if (!hpsTaus.isValid()) {
-    std::cout << "############# hpsTaus invalid collection, skipping event " << iEvent.id();
-    edm::LogWarning("TauTruthGraphValidator") << "hpsTaus invalid collection, skipping event " << iEvent.id();
-    return;
-  }
 
   if (!graph.isValid()) {
     std::cout << "############# graph invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "graph invalid collection, skipping event " << iEvent.id();
     return;
   }
-
-  if (!ecalClusters.isValid()) {
-    std::cout << "############# ecalClusters invalid collection, skipping event " << iEvent.id();
-    edm::LogWarning("TauTruthGraphValidator") << "ecalClusters invalid collection, skipping event " << iEvent.id();
-    return;
-  }
-
-  if (!hcalClusters.isValid()) {
-    std::cout << "############# hcalClusters invalid collection, skipping event " << iEvent.id();
-    edm::LogWarning("TauTruthGraphValidator") << "hcalClusters invalid collection, skipping event " << iEvent.id();
-    return;
-  }
-  
-  if (!hgcalTracksters.isValid()) {
-    std::cout << "############# hgcalTracksters invalid collection, skipping event " << iEvent.id();
-    edm::LogWarning("TauTruthGraphValidator") << "hgcalTracksters invalid collection, skipping event " << iEvent.id();
-    return;
-  }
-
-  if (!ecalMap.isValid()) {
-    std::cout << "############# ecalMap invalid collection, skipping event " << iEvent.id();
-    edm::LogWarning("TauTruthGraphValidator") << "ecalMap invalid collection, skipping event " << iEvent.id();
-    return;
-  }
-
-  if (!hcalMap.isValid()) {
-    std::cout << "############# hcalMap invalid collection, skipping event " << iEvent.id();
-    edm::LogWarning("TauTruthGraphValidator") << "hcalMap invalid collection, skipping event " << iEvent.id();
+  if (!hpsTaus.isValid()) {
+    std::cout << "############# hpsTaus invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "hpsTaus invalid collection, skipping event " << iEvent.id();
     return;
   }
   if (!pfCandidates.isValid() || !pfCandidatesBarrel.isValid() || !ticlCandidates.isValid()) {
@@ -207,7 +182,43 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
     edm::LogWarning("TauTruthGraphValidator") << "TICL-to-PF input invalid, skipping event " << iEvent.id();
     return;
   }
+  if (!ecalClusters.isValid()) {
+    std::cout << "############# ecalClusters invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "ecalClusters invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+  if (!hcalClusters.isValid()) {
+    std::cout << "############# hcalClusters invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "hcalClusters invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+  if (!hgcalTracksters.isValid()) {
+    std::cout << "############# hgcalTracksters invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "hgcalTracksters invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+  
+  // ——————————————————————————————————————————————————————————————————————————
+  // RecoToTruth 
+  // ——————————————————————————————————————————————————————————————————————————
+  
+  edm::Handle<BranchMap> ecalMap;
+  iEvent.getByToken(ecalMapToken_, ecalMap);
+  edm::Handle<BranchMap> hcalMap;
+  iEvent.getByToken(hcalMapToken_, hcalMap);
+  edm::Handle<BranchMap> hgcalTracksterMap;
+  iEvent.getByToken(hgcalTracksterMapToken_, hgcalTracksterMap);
 
+  if (!ecalMap.isValid()) {
+    std::cout << "############# ecalMap invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "ecalMap invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+  if (!hcalMap.isValid()) {
+    std::cout << "############# hcalMap invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "hcalMap invalid collection, skipping event " << iEvent.id();
+    return;
+  }
   if (!hgcalTracksterMap.isValid()) {
     std::cout << "############# hgcalTracksterMap invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "hgcalTracksterMap invalid collection, skipping event " << iEvent.id();
@@ -246,9 +257,9 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
 
   for (const auto& hpsTau : *hpsTaus) {
     std::cout << "############# hpsTau.pt() = " << hpsTau.pt() << " hpsTau.eta() = " << hpsTau.eta()  << std::endl;
-    const auto PFCands = hpsTau.signalPFCands();
-    std::cout << "############# Number of signal PFCandidates in tau = " << PFCands.size() << std::endl;
-    for (const auto& pfCand : PFCands) {
+    const auto& pFCands = hpsTau.signalPFCands();
+    std::cout << "############# Number of signal PFCandidates in tau = " << pFCands.size() << std::endl;
+    for (const auto& pfCand : pFCands) {
       if (pfCand.isNonnull() && pfCand.id() == pfCandidates.id() && pfCand.key() >= pfCandidatesBarrel->size()) {
         const auto ticlCandidateIndex = pfCand.key() - pfCandidatesBarrel->size();
         if (ticlCandidateIndex < ticlCandidates->size()) {
@@ -303,8 +314,55 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
       }
     }
   }
-}
 
+  // ——————————————————————————————————————————————————————————————————————————
+  // TruthToReco
+  // ——————————————————————————————————————————————————————————————————————————
+
+  edm::Handle<BranchMap> ecalTruthToRecoMap;
+  iEvent.getByToken(ecalTruthToRecoMapToken_, ecalTruthToRecoMap);
+  edm::Handle<BranchMap> hcalTruthToRecoMap;
+  iEvent.getByToken(hcalTruthToRecoMapToken_, hcalTruthToRecoMap);
+  edm::Handle<BranchMap> hgcalTracksterTruthToRecoMap;
+  iEvent.getByToken(hgcalTracksterTruthToRecoMapToken_, hgcalTracksterTruthToRecoMap);
+
+  if (!ecalTruthToRecoMap.isValid()) {
+    std::cout << "############# ecalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "ecalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+  if (!hcalTruthToRecoMap.isValid()) {
+    std::cout << "############# hcalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "hcalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+  if (!hgcalTracksterTruthToRecoMap.isValid()) {
+    std::cout << "############# hgcalTracksterTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    edm::LogWarning("TauTruthGraphValidator") << "hgcalTracksterTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    return;
+  }
+
+  for (const auto& truthTau : graph->particleViews()) {
+    if (std::abs(truthTau.pdgId()) != 15) continue;
+    std::cout << "############# Truth tau pt = " << truthTau.momentum().pt()
+              << " eta = " << truthTau.momentum().eta() << std::endl;
+    
+    auto const ecalClusterMatches = (*ecalTruthToRecoMap)[truthTau.id()];
+    if (!ecalClusterMatches.empty()) {
+      std::cout << "############# Truth tau has " << ecalClusterMatches.size() << " associated ECAL clusters" << std::endl;
+    }
+
+    auto const hcalClusterMatches = (*hcalTruthToRecoMap)[truthTau.id()];
+    if (!hcalClusterMatches.empty()) {
+      std::cout << "############# Truth tau has " << hcalClusterMatches.size() << " associated HCAL clusters" << std::endl;
+    }
+
+    auto const hgcalTracksterMatches = (*hgcalTracksterTruthToRecoMap)[truthTau.id()];
+    if (!hgcalTracksterMatches.empty()) {
+      std::cout << "############# Truth tau has " << hgcalTracksterMatches.size() << " associated HGCAL tracksters" << std::endl;
+    }
+  }
+}
 
 void TauTruthGraphValidator::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   edm::ParameterSetDescription desc;
@@ -320,6 +378,9 @@ void TauTruthGraphValidator::fillDescriptions(edm::ConfigurationDescriptions& de
   desc.add<edm::InputTag>("ticlCandidatesToken", edm::InputTag("hltTiclCandidate"));
   desc.add<edm::InputTag>("hgcalTrackstersToken", edm::InputTag("hltTiclCandidate"));
   desc.add<edm::InputTag>("hgcalTracksterMapToken", edm::InputTag("hltTruthBranchTracksterAssociators", "hltTiclTrackstersCLUE3DHighRecoToTruthFixed"));
+  desc.add<edm::InputTag>("ecalTruthToRecoMapToken", edm::InputTag("hltTruthBranchPFClusterEcalAssociators", "hltParticleFlowClusterECALTruthToReco"));
+  desc.add<edm::InputTag>("hcalTruthToRecoMapToken", edm::InputTag("hltTruthBranchPFClusterHcalAssociators", "hltParticleFlowClusterHCALTruthToReco"));
+  desc.add<edm::InputTag>("hgcalTracksterTruthToRecoMapToken", edm::InputTag("hltTruthBranchTracksterAssociators", "hltTiclCandidateTruthToReco"));
   descriptions.add("TauTruthGraphValidator", desc);
 }
 
