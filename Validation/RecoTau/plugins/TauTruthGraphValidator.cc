@@ -39,7 +39,10 @@
 #include "DataFormats/HLTReco/interface/TriggerObject.h"
 #include "DataFormats/HLTReco/interface/TriggerFilterObjectWithRefs.h"
 
+#include "PhysicsTools/TruthInfo/interface/TauTruthUtils.h"
+#include "PhysicsTools/TruthInfo/interface/Branch.h"
 #include "SimDataFormats/TruthInfo/interface/Graph.h"
+#include "PhysicsTools/TruthInfo/interface/TruthLevels.h"
 #include "SimDataFormats/CaloAnalysis/interface/CaloParticle.h"
 #include "SimDataFormats/Associations/interface/TICLAssociationMap.h"
 
@@ -57,6 +60,7 @@ private:
   void bookHistograms(DQMStore::IBooker&, edm::Run const&, edm::EventSetup const&) override;
   void analyze(const edm::Event&, const edm::EventSetup&) override;
   double checkForAncestralTau(const edm::Handle<truth::Graph> graph, const auto& associations);
+  int getTauDecayMode(const auto& daughters);
 
   edm::EDGetTokenT<truth::Graph> graphToken_;
   edm::EDGetTokenT<reco::PFTauCollection> hpsTauToken_;
@@ -87,9 +91,12 @@ private:
     MonitorElement* energyFake = nullptr;
   };
 
+  MonitorElement* truthTauDM = nullptr;
+
   CaloObjectHistograms ecalClusterHistograms_;
   CaloObjectHistograms hcalClusterHistograms_;
   CaloObjectHistograms hgcalClusterHistograms_;
+
 };
 
 TauTruthGraphValidator::TauTruthGraphValidator(const edm::ParameterSet& iConfig)
@@ -112,6 +119,7 @@ TauTruthGraphValidator::TauTruthGraphValidator(const edm::ParameterSet& iConfig)
 
 void TauTruthGraphValidator::bookHistograms(DQMStore::IBooker& ibook, edm::Run const&, edm::EventSetup const&) {
   ibook.setCurrentFolder(folder_);
+  truthTauDM = ibook.book1D("truthTauDM", "Truth Tau Decay Mode; decay mode; objects", 13, -0.5, 12.5);
   auto bookClusterHistograms = [&](const std::string& subfolder, CaloObjectHistograms& histograms) {
     ibook.setCurrentFolder(folder_ + "/" + subfolder);
     histograms.pt = ibook.book1D("caloObject_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 100, 0., 200.);
@@ -143,6 +151,40 @@ double TauTruthGraphValidator::checkForAncestralTau(const edm::Handle<truth::Gra
   }    
   return score;
 };
+
+int TauTruthGraphValidator::getTauDecayMode(const auto& daughters) {
+  int nProngs = 0;
+  int nPi0s = 0;
+  int nOthers = 0;
+  for (const auto& daughter : daughters) {
+    if (daughter.pdgId() == 22) continue;  // skip photons
+    else if (std::abs(daughter.pdgId()) == 211 || std::abs(daughter.pdgId()) == 321) {
+      nProngs++;
+    }
+    else if (daughter.pdgId() == 111) {
+      nPi0s++;
+    }
+    else {
+      nOthers++;
+      std::cout << "************* Truth tau has unexpected daughter with pdgId = " << daughter.pdgId() << std::endl;
+    }
+  }
+  int decayMode = 12;
+  if (nOthers > 0) decayMode = 12;  // other
+  else if (nProngs == 1 and nPi0s == 0) decayMode = 0;  // 1-prong, no pi0
+  else if (nProngs == 1 and nPi0s == 1) decayMode = 1;  // 1-prong, 1 pi0
+  else if (nProngs == 1 and nPi0s == 2) decayMode = 2;  // 1-prong, 2 pi0
+  else if (nProngs == 3 and nPi0s == 0)decayMode = 10; // 3-prong, no pi0
+  else if (nProngs == 3 and nPi0s == 1) decayMode = 11; // 3-prong, 1 pi0
+  else {
+    std::cout << "************* Truth tau has unexpected decay, daughter pdgIds = ";
+    for (const auto& daughter : daughters) {
+      std::cout << daughter.pdgId() << " ";
+    }
+    std::cout << std::endl;
+  }
+  return decayMode;
+}
 
 void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventSetup&) {
   
@@ -327,52 +369,59 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
   iEvent.getByToken(hgcalTracksterTruthToRecoMapToken_, hgcalTracksterTruthToRecoMap);
 
   if (!ecalTruthToRecoMap.isValid()) {
-    std::cout << "############# ecalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "************* ecalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "ecalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
     return;
   }
   if (!hcalTruthToRecoMap.isValid()) {
-    std::cout << "############# hcalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "************* hcalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "hcalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
     return;
   }
   if (!hgcalTracksterTruthToRecoMap.isValid()) {
-    std::cout << "############# hgcalTracksterTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "************* hgcalTracksterTruthToRecoMap invalid collection, skipping event " << iEvent.id();
     edm::LogWarning("TauTruthGraphValidator") << "hgcalTracksterTruthToRecoMap invalid collection, skipping event " << iEvent.id();
     return;
   }
 
-  for (const auto& truthTau : graph->particleViews()) {
-    if (std::abs(truthTau.pdgId()) != 15) continue;
-    std::cout << "############# Truth tau pt = " << truthTau.momentum().pt()
+  for (const uint32_t id : truth::levelAntichain(*graph, truth::levelFromName("tauVisibleHadronic"))) {
+    const auto& truthTau = graph->particle(id);
+
+    std::cout << "************* Truth tau pt = " << truthTau.momentum().pt()
               << " eta = " << truthTau.momentum().eta() << std::endl;
-    
+
+    const truth::Branch tauDecayBranch(&truthTau, truth::ClosureSpec::untilPdgId(TauTruthUtils::kTauDecayHadrons));
+    const auto daughters = tauDecayBranch.closureLeaves();
+    int decayMode = getTauDecayMode(daughters);
+    truthTauDM->Fill(decayMode);
+
     auto const ecalClusterMatches = (*ecalTruthToRecoMap)[truthTau.id()];
     if (!ecalClusterMatches.empty()) {
-      std::cout << "############# Truth tau has " << ecalClusterMatches.size() << " associated ECAL clusters" << std::endl;
+      std::cout << "************* Truth tau has " << ecalClusterMatches.size() << " associated ECAL clusters" << std::endl;
       for (const auto& ecalClusterMatch : ecalClusterMatches) {
-        std::cout << "############# ECAL cluster match: index = " << ecalClusterMatch.index()
+        std::cout << "************* ECAL cluster match: index = " << ecalClusterMatch.index()
                   << " score = " << ecalClusterMatch.score() << std::endl;
       }
     }
 
     auto const hcalClusterMatches = (*hcalTruthToRecoMap)[truthTau.id()];
     if (!hcalClusterMatches.empty()) {
-      std::cout << "############# Truth tau has " << hcalClusterMatches.size() << " associated HCAL clusters" << std::endl;
+      std::cout << "************* Truth tau has " << hcalClusterMatches.size() << " associated HCAL clusters" << std::endl;
       for (const auto& hcalClusterMatch : hcalClusterMatches) {
-        std::cout << "############# HCAL cluster match: index = " << hcalClusterMatch.index()
+        std::cout << "************* HCAL cluster match: index = " << hcalClusterMatch.index()
                   << " score = " << hcalClusterMatch.score() << std::endl;
       }
     }
 
     auto const hgcalTracksterMatches = (*hgcalTracksterTruthToRecoMap)[truthTau.id()];
     if (!hgcalTracksterMatches.empty()) {
-      std::cout << "############# Truth tau has " << hgcalTracksterMatches.size() << " associated HGCAL tracksters" << std::endl;
+      std::cout << "************* Truth tau has " << hgcalTracksterMatches.size() << " associated HGCAL tracksters" << std::endl;
       for (const auto& hgcalTracksterMatch : hgcalTracksterMatches) {
-        std::cout << "############# HGCAL trackster match: index = " << hgcalTracksterMatch.index()
+        std::cout << "************* HGCAL trackster match: index = " << hgcalTracksterMatch.index()
                   << " score = " << hgcalTracksterMatch.score() << std::endl;
       }
     }
+
   }
 }
 
