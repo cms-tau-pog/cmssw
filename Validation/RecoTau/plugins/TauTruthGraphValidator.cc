@@ -350,16 +350,28 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
     auto const ecalClusterMatches = (*ecalTruthToRecoMap)[truthTau.id()];
     if (!ecalClusterMatches.empty()) {
       std::cout << "############# Truth tau has " << ecalClusterMatches.size() << " associated ECAL clusters" << std::endl;
+      for (const auto& ecalClusterMatch : ecalClusterMatches) {
+        std::cout << "############# ECAL cluster match: index = " << ecalClusterMatch.index()
+                  << " score = " << ecalClusterMatch.score() << std::endl;
+      }
     }
 
     auto const hcalClusterMatches = (*hcalTruthToRecoMap)[truthTau.id()];
     if (!hcalClusterMatches.empty()) {
       std::cout << "############# Truth tau has " << hcalClusterMatches.size() << " associated HCAL clusters" << std::endl;
+      for (const auto& hcalClusterMatch : hcalClusterMatches) {
+        std::cout << "############# HCAL cluster match: index = " << hcalClusterMatch.index()
+                  << " score = " << hcalClusterMatch.score() << std::endl;
+      }
     }
 
     auto const hgcalTracksterMatches = (*hgcalTracksterTruthToRecoMap)[truthTau.id()];
     if (!hgcalTracksterMatches.empty()) {
       std::cout << "############# Truth tau has " << hgcalTracksterMatches.size() << " associated HGCAL tracksters" << std::endl;
+      for (const auto& hgcalTracksterMatch : hgcalTracksterMatches) {
+        std::cout << "############# HGCAL trackster match: index = " << hgcalTracksterMatch.index()
+                  << " score = " << hgcalTracksterMatch.score() << std::endl;
+      }
     }
   }
 }
