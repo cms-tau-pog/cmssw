@@ -79,11 +79,24 @@ private:
     MonitorElement* energyFake = nullptr;
   };
 
-  MonitorElement* truthTauDM = nullptr;
+  struct TruthObjectHistograms {
+    MonitorElement* dm = nullptr;
+    MonitorElement* dmMatched = nullptr;
+
+    MonitorElement* pt = nullptr;
+    MonitorElement* ptMatched = nullptr;
+
+    MonitorElement* eta = nullptr;
+    MonitorElement* etaMatched = nullptr;
+
+    MonitorElement* energy = nullptr;
+    MonitorElement* energyMatched = nullptr;
+  };
 
   CaloObjectHistograms ecalClusterHistograms_;
   CaloObjectHistograms hcalClusterHistograms_;
   CaloObjectHistograms hgcalClusterHistograms_;
+  TruthObjectHistograms truthTauHistograms_;
 
 };
 
@@ -106,28 +119,43 @@ TauTruthGraphValidator::TauTruthGraphValidator(const edm::ParameterSet& iConfig)
 }
 
 void TauTruthGraphValidator::bookHistograms(DQMStore::IBooker& ibook, edm::Run const&, edm::EventSetup const&) {
-  ibook.setCurrentFolder(folder_);
-  truthTauDM = ibook.book1D("truthTauDM", "Truth Tau Decay Mode; decay mode; objects", 13, -0.5, 12.5);
- 
   auto bookClusterHistograms = [&](const std::string& subfolder, CaloObjectHistograms& histograms) {
     ibook.setCurrentFolder(folder_ + "/" + subfolder);
    
-    histograms.pt = ibook.book1D("caloObject_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 100, 0., 200.);
-    histograms.ptFake = ibook.book1D("caloObjectFake_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 100, 0., 200.);
+    histograms.pt = ibook.book1D("caloObject_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 50, 0., 200.);
+    histograms.ptFake = ibook.book1D("caloObjectFake_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 50, 0., 200.);
     
-    histograms.eta = ibook.book1D("caloObject_eta", "Tau signal calorimeter objects; eta; objects", 100, -5., 5.);
-    histograms.etaFake = ibook.book1D("caloObjectFake_eta", "Tau signal calorimeter objects; eta; objects", 100, -5., 5.);
-    
-    histograms.energy = ibook.book1D("caloObject_energy", "Tau signal calorimeter objects; energy [GeV]; objects", 100, 0., 500.);
-    histograms.energyFake = ibook.book1D("caloObjectFake_energy", "Tau signal calorimeter objects; energy [GeV]; objects", 100, 0., 500.);
+    histograms.eta = ibook.book1D("caloObject_eta", "Tau signal calorimeter objects; eta; objects", 50, -4., 4.);
+    histograms.etaFake = ibook.book1D("caloObjectFake_eta", "Tau signal calorimeter objects; eta; objects", 50, -4., 4.);
+
+    histograms.energy = ibook.book1D("caloObject_energy", "Tau signal calorimeter objects; energy [GeV]; objects", 50, 0., 500.);
+    histograms.energyFake = ibook.book1D("caloObjectFake_energy", "Tau signal calorimeter objects; energy [GeV]; objects", 50, 0., 500.);
   };
+
+  auto bookTruthHistograms = [&](TruthObjectHistograms& histograms) {
+    ibook.setCurrentFolder(folder_ + "/TruthTau");
+    
+    histograms.dm = ibook.book1D("truthTau_decayMode", "Truth tau decay mode; decay mode; taus", 13, -0.5, 12.5);
+    histograms.dmMatched = ibook.book1D("truthTauMatched_decayMode", "Truth tau decay mode; decay mode; taus", 13, -0.5, 12.5);
+    
+    histograms.pt = ibook.book1D("truthProng_pt", "Truth prong pT; pT [GeV]; prongs", 50, 0., 200.);
+    histograms.ptMatched = ibook.book1D("truthProngMatched_pt", "Truth prong pT; pT [GeV]; prongs", 50, 0., 200.);
+    
+    histograms.eta = ibook.book1D("truthProng_eta", "Truth prong eta; eta; prongs", 50, -4., 4.);
+    histograms.etaMatched = ibook.book1D("truthProngMatched_eta", "Truth prong eta; eta; prongs", 50, -4., 4.);
+    
+    histograms.energy = ibook.book1D("truthProng_energy", "Truth prong energy; energy [GeV]; prongs", 50, 0., 500.);
+    histograms.energyMatched = ibook.book1D("truthProngMatched_energy", "Truth prong energy; energy [GeV]; prongs", 50, 0., 500.);
+  };
+
   bookClusterHistograms("ECAL", ecalClusterHistograms_);
   bookClusterHistograms("HCAL", hcalClusterHistograms_);
   bookClusterHistograms("HGCAL", hgcalClusterHistograms_);
+  bookTruthHistograms(truthTauHistograms_);
 }
 
 double TauTruthGraphValidator::checkForAncestralTau(const edm::Handle<truth::Graph> graph, const auto& associations) {
-  double score = 2.0;  // defualt score to return if no tau is found
+  double score = 2.0;  // default score to return if no tau is found
   for (auto const& assoc : associations) {
     const auto particleId = assoc.index();
     if (particleId >= graph->nParticles()) {
@@ -147,7 +175,13 @@ int TauTruthGraphValidator::getTauDecayMode(const auto& daughters) {
   int nPi0s = 0;
   int nOthers = 0;
   for (const auto& daughter : daughters) {
-    if (daughter.pdgId() == 22) continue;  // skip photons
+    if (!daughter.hasGen()) {
+      std::cout << "************* Truth tau has non-gen daughter with pdgId = " << daughter.pdgId() << std::endl;
+      continue;
+    }
+    else if (daughter.pdgId() == 22) {
+      continue;
+    }  
     else if (std::abs(daughter.pdgId()) == 211 || std::abs(daughter.pdgId()) == 321) {
       nProngs++;
     }
@@ -378,6 +412,22 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
     return;
   }
 
+  auto checkIfMatched = [&](const auto& matches, const auto& mapToPf) {
+    if (!matches.empty()) {
+      const auto bestMatchIndex = matches[0].index();
+      const auto& pfCandsFromBestMatch = mapToPf[bestMatchIndex];
+      if (!pfCandsFromBestMatch.empty()) {
+        for (const auto& pfCand : pfCandsFromBestMatch) {
+          const auto& hpsTausFromPfCand = pfCandToHpsTau[pfCand];
+          if (!hpsTausFromPfCand.empty()) {
+            return true;  // Found a match to a reconstructed tau
+          }
+        }
+      }
+    }
+    return false;  // No match found
+  };
+
   for (const uint32_t id : truth::levelAntichain(*graph, truth::levelFromName("tauVisibleHadronic"))) {
     const auto& truthTau = graph->particle(id);
 
@@ -386,13 +436,41 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
 
     const truth::Branch tauDecayBranch(&truthTau, truth::ClosureSpec::untilPdgId(TauTruthUtils::kTauDecayHadrons));
     const auto daughters = tauDecayBranch.closureLeaves();
-    int decayMode = getTauDecayMode(daughters);
-    truthTauDM->Fill(decayMode);
+    const int decayMode = getTauDecayMode(daughters);
+    bool truthTauMatchedToHps = false;
 
     for (const auto& prong : daughters) {
-      if (std::abs(prong.pdgId()) != 211 && std::abs(prong.pdgId()) != 321) continue; 
-      const auto ecalClusterMatches = (*ecalTruthToRecoMap)[prong.id()];
+      if (std::abs(prong.pdgId()) != 211 && std::abs(prong.pdgId()) != 321) continue;
+      const auto& prongMomentum = prong.momentum();
+      truthTauHistograms_.pt->Fill(prongMomentum.pt());
+      truthTauHistograms_.eta->Fill(prongMomentum.eta());
+      truthTauHistograms_.energy->Fill(prongMomentum.energy());
       
+      const auto ecalClusterMatches = (*ecalTruthToRecoMap)[prong.id()];
+      const auto hcalClusterMatches = (*hcalTruthToRecoMap)[prong.id()];
+      const auto hgcalTracksterMatches = (*hgcalTracksterTruthToRecoMap)[prong.id()];
+
+      const bool ecalMatchedToHps = checkIfMatched(ecalClusterMatches, ecalClusterToPfCand);
+      const bool hcalMatchedToHps = checkIfMatched(hcalClusterMatches, hcalClusterToPfCand);
+      const bool hgcalMatchedToHps = checkIfMatched(hgcalTracksterMatches, tracksterToPfCand);
+
+      if (ecalMatchedToHps || hcalMatchedToHps || hgcalMatchedToHps) {
+        truthTauHistograms_.ptMatched->Fill(prongMomentum.pt());
+        truthTauHistograms_.etaMatched->Fill(prongMomentum.eta());
+        truthTauHistograms_.energyMatched->Fill(prongMomentum.energy());
+        truthTauMatchedToHps = true;
+      }
+    }
+    truthTauHistograms_.dm->Fill(decayMode);
+    if (truthTauMatchedToHps) {
+      truthTauHistograms_.dmMatched->Fill(decayMode);
+    }
+    else {
+      std::cout << "************* Truth tau with DM = " << decayMode << " and daughters: ";
+      for (const auto& daughter : daughters) {
+        std::cout << daughter.pdgId() << " ";
+      }
+      std::cout << "not matched to any reconstructed tau" << std::endl;
     }
   }
 }
