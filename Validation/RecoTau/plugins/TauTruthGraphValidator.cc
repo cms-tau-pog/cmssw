@@ -176,7 +176,7 @@ int TauTruthGraphValidator::getTauDecayMode(const auto& daughters) {
   int nOthers = 0;
   for (const auto& daughter : daughters) {
     if (!daughter.hasGen()) {
-      std::cout << "************* Truth tau has non-gen daughter with pdgId = " << daughter.pdgId() << std::endl;
+      std::cout << "Truth tau has non-gen daughter with pdgId = " << daughter.pdgId() << std::endl;
       continue;
     }
     else if (daughter.pdgId() == 22) {
@@ -190,7 +190,7 @@ int TauTruthGraphValidator::getTauDecayMode(const auto& daughters) {
     }
     else {
       nOthers++;
-      std::cout << "************* Truth tau has unexpected daughter with pdgId = " << daughter.pdgId() << std::endl;
+      std::cout << "Truth tau has unexpected daughter with pdgId = " << daughter.pdgId() << std::endl;
     }
   }
   int decayMode = 12;
@@ -201,7 +201,7 @@ int TauTruthGraphValidator::getTauDecayMode(const auto& daughters) {
   else if (nProngs == 3 and nPi0s == 0)decayMode = 10; // 3-prong, no pi0
   else if (nProngs == 3 and nPi0s == 1) decayMode = 11; // 3-prong, 1 pi0
   else {
-    std::cout << "************* Truth tau has unexpected decay, daughter pdgIds = ";
+    std::cout << "Truth tau has unexpected decay, daughter pdgIds = ";
     for (const auto& daughter : daughters) {
       std::cout << daughter.pdgId() << " ";
     }
@@ -212,6 +212,9 @@ int TauTruthGraphValidator::getTauDecayMode(const auto& daughters) {
 
 void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventSetup&) {
   
+  std::cout << " ——————————————————————————————————————————————————————————————————————————" << std::endl;
+  std::cout << "Analyzing " << iEvent.id() << std::endl;
+
   // ——————————————————————————————————————————————————————————————————————————
   // Common
   // ——————————————————————————————————————————————————————————————————————————
@@ -233,33 +236,35 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
   edm::Handle<std::vector<ticl::Trackster>> hgcalTracksters;
   iEvent.getByToken(hgcalTrackstersToken_, hgcalTracksters);
 
+  bool recoTausPresent = true;
+
   if (!graph.isValid()) {
-    std::cout << "############# graph invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# graph invalid collection, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "graph invalid collection, skipping event " << iEvent.id();
     return;
   }
   if (!hpsTaus.isValid()) {
-    std::cout << "############# hpsTaus invalid collection, skipping event " << iEvent.id();
-    edm::LogWarning("TauTruthGraphValidator") << "hpsTaus invalid collection, skipping event " << iEvent.id();
-    return;
+    std::cout << "############# hpsTaus invalid collection " << iEvent.id() << std::endl;
+    edm::LogWarning("TauTruthGraphValidator") << "hpsTaus invalid collection " << iEvent.id();
+    recoTausPresent = false;
   }
   if (!pfCandidates.isValid() || !pfCandidatesBarrel.isValid() || !ticlCandidates.isValid()) {
-    std::cout << "############# TICL-to-PF input invalid, skipping event " << iEvent.id();
+    std::cout << "############# TICL-to-PF input invalid, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "TICL-to-PF input invalid, skipping event " << iEvent.id();
     return;
   }
   if (!ecalClusters.isValid()) {
-    std::cout << "############# ecalClusters invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# ecalClusters invalid collection, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "ecalClusters invalid collection, skipping event " << iEvent.id();
     return;
   }
   if (!hcalClusters.isValid()) {
-    std::cout << "############# hcalClusters invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# hcalClusters invalid collection, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "hcalClusters invalid collection, skipping event " << iEvent.id();
     return;
   }
   if (!hgcalTracksters.isValid()) {
-    std::cout << "############# hgcalTracksters invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# hgcalTracksters invalid collection, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "hgcalTracksters invalid collection, skipping event " << iEvent.id();
     return;
   }
@@ -281,17 +286,17 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
   iEvent.getByToken(hgcalTracksterMapToken_, hgcalTracksterMap);
 
   if (!ecalMap.isValid()) {
-    std::cout << "############# ecalMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# ecalMap invalid collection, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "ecalMap invalid collection, skipping event " << iEvent.id();
     return;
   }
   if (!hcalMap.isValid()) {
-    std::cout << "############# hcalMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# hcalMap invalid collection, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "hcalMap invalid collection, skipping event " << iEvent.id();
     return;
   }
   if (!hgcalTracksterMap.isValid()) {
-    std::cout << "############# hgcalTracksterMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "############# hgcalTracksterMap invalid collection, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "hgcalTracksterMap invalid collection, skipping event " << iEvent.id();
     return;
   }
@@ -308,7 +313,8 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
   auto fillCaloObjectFakeHistograms = [&](double energy, const auto& position, CaloObjectHistograms& histograms, double threshold, const auto& associations) {
     double tauScore = checkForAncestralTau(graph, associations);
     if (tauScore > threshold) {
-      std::cout << "############# Found tau with score = " << tauScore << std::endl;
+      std::cout << "Association score " << tauScore << " is above threshold "
+                << threshold << ", marking as fake" << std::endl;
       const double rho = std::sqrt(position.x() * position.x() + position.y() * position.y());
       const double magnitude = std::sqrt(rho * rho + position.z() * position.z());
       const double pt = magnitude > 0. ? energy * rho / magnitude : 0.;
@@ -316,69 +322,77 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
       histograms.etaFake->Fill(position.eta());
       histograms.energyFake->Fill(energy);
     }
+    else {
+      std::cout << "Association score " << tauScore << " is below threshold "
+                << threshold << ", marking as matched" << std::endl;
+    }
   };
 
-  double tauScoreThreshold = 0.1;  // anything above this is considered a fake
+  const double recoToTruthThreshold = 0.1;  // anything above this is considered a fake
 
-  for (size_t hpsTauIndex = 0; hpsTauIndex < hpsTaus->size(); ++hpsTauIndex) {
-    const auto& hpsTau = (*hpsTaus)[hpsTauIndex];
-    std::cout << "############# hpsTau.pt() = " << hpsTau.pt() << " hpsTau.eta() = " << hpsTau.eta()  << std::endl;
-    const auto& pfCandsFromHpsTau = hpsTau.signalPFCands();
-    std::cout << "############# Number of signal PFCandidates in tau = " << pfCandsFromHpsTau.size() << std::endl;
-    for (const auto& pfCand : pfCandsFromHpsTau) {
-      pfCandToHpsTau[pfCand.key()].push_back(hpsTauIndex);
-      if (pfCand.isNonnull() && pfCand.id() == pfCandidates.id() && pfCand.key() >= pfCandidatesBarrel->size()) {
-        const auto ticlCandidateIndex = pfCand.key() - pfCandidatesBarrel->size();
-        if (ticlCandidateIndex < ticlCandidates->size()) {
-          for (const auto& trackster : ticlCandidates->at(ticlCandidateIndex).tracksters()) {
-            if (!trackster.isNonnull() || trackster.id() != hgcalTracksters.id() ||
-                trackster.key() >= hgcalTracksters->size()) {
-              continue;
+  if (recoTausPresent) {
+    for (size_t hpsTauIndex = 0; hpsTauIndex < hpsTaus->size(); ++hpsTauIndex) {
+      const auto& hpsTau = (*hpsTaus)[hpsTauIndex];
+      std::cout << "############# hpsTau.pt() = " << hpsTau.pt()
+                << " hpsTau.eta() = " << hpsTau.eta()  
+                << " hpsTau.phi() = " << hpsTau.phi() << std::endl;
+      const auto& pfCandsFromHpsTau = hpsTau.signalPFCands();
+      std::cout << "Number of signal PFCandidates in tau = " << pfCandsFromHpsTau.size() << std::endl;
+      for (const auto& pfCand : pfCandsFromHpsTau) {
+        pfCandToHpsTau[pfCand.key()].push_back(hpsTauIndex);
+        if (pfCand.isNonnull() && pfCand.id() == pfCandidates.id() && pfCand.key() >= pfCandidatesBarrel->size()) {
+          const auto ticlCandidateIndex = pfCand.key() - pfCandidatesBarrel->size();
+          if (ticlCandidateIndex < ticlCandidates->size()) {
+            for (const auto& trackster : ticlCandidates->at(ticlCandidateIndex).tracksters()) {
+              if (!trackster.isNonnull() || trackster.id() != hgcalTracksters.id() ||
+                  trackster.key() >= hgcalTracksters->size()) {
+                continue;
+              }
+              tracksterToPfCand[trackster.key()].push_back(pfCand.key());
+              std::cout << "HGCAL trackster.raw_energy() = " << trackster->raw_energy()
+                        << " trackster.eta() = " << trackster->barycenter().eta() << std::endl;
+              fillCaloObjectHistograms(trackster->raw_energy(),
+                                      trackster->barycenter(),
+                                      hgcalClusterHistograms_);
+              fillCaloObjectFakeHistograms(trackster->raw_energy(),
+                                          trackster->barycenter(),
+                                          hgcalClusterHistograms_,
+                                          recoToTruthThreshold,
+                                          (*hgcalTracksterMap)[trackster.key()]);
             }
-	          tracksterToPfCand[trackster.key()].push_back(pfCand.key());
-            std::cout << "############# HGCAL trackster.raw_energy() = " << trackster->raw_energy()
-                      << " trackster.eta() = " << trackster->barycenter().eta() << std::endl;
-            fillCaloObjectHistograms(trackster->raw_energy(),
-                                     trackster->barycenter(),
-                                     hgcalClusterHistograms_);
-            fillCaloObjectFakeHistograms(trackster->raw_energy(),
-                                         trackster->barycenter(),
-                                         hgcalClusterHistograms_,
-                                         tauScoreThreshold,
-                                         (*hgcalTracksterMap)[trackster.key()]);
           }
         }
-      }
-      else {
-        for (auto const& [block, index] : pfCand->elementsInBlocks()) {
-          auto const& element = block->elements()[index];
-          auto const cluster = element.clusterRef();
-          if (cluster.isNull()) {
-            continue;
-          }
-          if (cluster.id() == ecalClusters.id()) {
-	          ecalClusterToPfCand[cluster.key()].push_back(pfCand.key());
-            std::cout << "############# ECAL pfCand.pt() = " << pfCand->pt() << " pfCand.eta() = " << pfCand->eta() << std::endl;
-            fillCaloObjectHistograms(cluster->energy(),
-                                     cluster->position(),
-                                     ecalClusterHistograms_);
-            fillCaloObjectFakeHistograms(cluster->energy(),
-                                         cluster->position(),
-                                         ecalClusterHistograms_,
-                                         tauScoreThreshold,
-                                         (*ecalMap)[cluster.key()]);
-          }
-          else if (cluster.id() == hcalClusters.id()) {
-	          hcalClusterToPfCand[cluster.key()].push_back(pfCand.key());
-            std::cout << "############# HCAL pfCand.pt() = " << pfCand->pt() << " pfCand.eta() = " << pfCand->eta() << std::endl;
-            fillCaloObjectHistograms(cluster->energy(),
-                                     cluster->position(),
-                                     hcalClusterHistograms_);
-            fillCaloObjectFakeHistograms(cluster->energy(),
-                                         cluster->position(),
-                                         hcalClusterHistograms_,
-                                         tauScoreThreshold,
-                                         (*hcalMap)[cluster.key()]);  
+        else {
+          for (auto const& [block, index] : pfCand->elementsInBlocks()) {
+            auto const& element = block->elements()[index];
+            auto const cluster = element.clusterRef();
+            if (cluster.isNull()) {
+              continue;
+            }
+            if (cluster.id() == ecalClusters.id()) {
+              ecalClusterToPfCand[cluster.key()].push_back(pfCand.key());
+              std::cout << "ECAL pfCand.pt() = " << pfCand->pt() << " pfCand.eta() = " << pfCand->eta() << std::endl;
+              fillCaloObjectHistograms(cluster->energy(),
+                                      cluster->position(),
+                                      ecalClusterHistograms_);
+              fillCaloObjectFakeHistograms(cluster->energy(),
+                                          cluster->position(),
+                                          ecalClusterHistograms_,
+                                          recoToTruthThreshold,
+                                          (*ecalMap)[cluster.key()]);
+            }
+            else if (cluster.id() == hcalClusters.id()) {
+              hcalClusterToPfCand[cluster.key()].push_back(pfCand.key());
+              std::cout << "HCAL pfCand.pt() = " << pfCand->pt() << " pfCand.eta() = " << pfCand->eta() << std::endl;
+              fillCaloObjectHistograms(cluster->energy(),
+                                      cluster->position(),
+                                      hcalClusterHistograms_);
+              fillCaloObjectFakeHistograms(cluster->energy(),
+                                          cluster->position(),
+                                          hcalClusterHistograms_,
+                                          recoToTruthThreshold,
+                                          (*hcalMap)[cluster.key()]);  
+            }
           }
         }
       }
@@ -397,29 +411,32 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
   iEvent.getByToken(hgcalTracksterTruthToRecoMapToken_, hgcalTracksterTruthToRecoMap);
 
   if (!ecalTruthToRecoMap.isValid()) {
-    std::cout << "************* ecalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "************* ecalTruthToRecoMap invalid collection, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "ecalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
     return;
   }
   if (!hcalTruthToRecoMap.isValid()) {
-    std::cout << "************* hcalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "************* hcalTruthToRecoMap invalid collection, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "hcalTruthToRecoMap invalid collection, skipping event " << iEvent.id();
     return;
   }
   if (!hgcalTracksterTruthToRecoMap.isValid()) {
-    std::cout << "************* hgcalTracksterTruthToRecoMap invalid collection, skipping event " << iEvent.id();
+    std::cout << "************* hgcalTracksterTruthToRecoMap invalid collection, skipping event " << iEvent.id() << std::endl;
     edm::LogWarning("TauTruthGraphValidator") << "hgcalTracksterTruthToRecoMap invalid collection, skipping event " << iEvent.id();
     return;
   }
 
-  auto checkIfMatched = [&](const auto& matches, const auto& mapToPf) {
-    if (!matches.empty()) {
-      const auto bestMatchIndex = matches[0].index();
-      const auto& pfCandsFromBestMatch = mapToPf[bestMatchIndex];
-      if (!pfCandsFromBestMatch.empty()) {
-        for (const auto& pfCand : pfCandsFromBestMatch) {
+  auto checkIfMatched = [&](const auto& matches, const auto& mapToPf, const double& threshold) {
+    if (matches.empty()) return false;
+    for (const auto& match : matches) {
+      if (match.score() > threshold) continue;  // Skip matches above the threshold
+      const auto& pfCandsFromMatch = mapToPf[match.index()];
+      if (!pfCandsFromMatch.empty()) {
+        for (const auto& pfCand : pfCandsFromMatch) {
           const auto& hpsTausFromPfCand = pfCandToHpsTau[pfCand];
           if (!hpsTausFromPfCand.empty()) {
+            std::cout << "Truth tau matched to a cluster with score " << match.score()
+                      << " which traces to a HPS tau" << std::endl;
             return true;  // Found a match to a reconstructed tau
           }
         }
@@ -428,11 +445,14 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
     return false;  // No match found
   };
 
+  const double truthToRecoThreshold = 1.0;  // anything below this is considered matched
+
   for (const uint32_t id : truth::levelAntichain(*graph, truth::levelFromName("tauVisibleHadronic"))) {
     const auto& truthTau = graph->particle(id);
 
     std::cout << "************* Truth tau pt = " << truthTau.momentum().pt()
-              << " eta = " << truthTau.momentum().eta() << std::endl;
+              << " eta = " << truthTau.momentum().eta()
+              << " phi = " << truthTau.momentum().phi() << std::endl;
 
     const truth::Branch tauDecayBranch(&truthTau, truth::ClosureSpec::untilPdgId(TauTruthUtils::kTauDecayHadrons));
     const auto daughters = tauDecayBranch.closureLeaves();
@@ -450,9 +470,9 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
       const auto hcalClusterMatches = (*hcalTruthToRecoMap)[prong.id()];
       const auto hgcalTracksterMatches = (*hgcalTracksterTruthToRecoMap)[prong.id()];
 
-      const bool ecalMatchedToHps = checkIfMatched(ecalClusterMatches, ecalClusterToPfCand);
-      const bool hcalMatchedToHps = checkIfMatched(hcalClusterMatches, hcalClusterToPfCand);
-      const bool hgcalMatchedToHps = checkIfMatched(hgcalTracksterMatches, tracksterToPfCand);
+      const bool ecalMatchedToHps = checkIfMatched(ecalClusterMatches, ecalClusterToPfCand, truthToRecoThreshold);
+      const bool hcalMatchedToHps = checkIfMatched(hcalClusterMatches, hcalClusterToPfCand, truthToRecoThreshold);
+      const bool hgcalMatchedToHps = checkIfMatched(hgcalTracksterMatches, tracksterToPfCand, truthToRecoThreshold);
 
       if (ecalMatchedToHps || hcalMatchedToHps || hgcalMatchedToHps) {
         truthTauHistograms_.ptMatched->Fill(prongMomentum.pt());
@@ -466,7 +486,7 @@ void TauTruthGraphValidator::analyze(const edm::Event& iEvent, const edm::EventS
       truthTauHistograms_.dmMatched->Fill(decayMode);
     }
     else {
-      std::cout << "************* Truth tau with DM = " << decayMode << " and daughters: ";
+      std::cout << "Truth tau with DM = " << decayMode << " and daughters: ";
       for (const auto& daughter : daughters) {
         std::cout << daughter.pdgId() << " ";
       }
@@ -480,7 +500,7 @@ void TauTruthGraphValidator::fillDescriptions(edm::ConfigurationDescriptions& de
   desc.add<edm::InputTag>("hpsTauToken", edm::InputTag("hltHpsPFTauProducer"));
   desc.add<std::string>("folder", "HLT/Tau/TruthGraphTauValidation");
   desc.add<edm::InputTag>("graphToken", edm::InputTag("truthLogicalGraphProducer"));
-  desc.add<edm::InputTag>("ecalClustersToken", edm::InputTag("hltParticleFlowClusterECALUnseeded"));
+  desc.add<edm::InputTag>("ecalClustersToken", edm::InputTag("hltParticleFlowClusterECAL"));
   desc.add<edm::InputTag>("ecalMapToken", edm::InputTag("hltTruthBranchPFClusterEcalAssociators", "hltParticleFlowClusterECALRecoToTruthFixed"));
   desc.add<edm::InputTag>("hcalClustersToken", edm::InputTag("hltParticleFlowClusterHCAL"));
   desc.add<edm::InputTag>("hcalMapToken", edm::InputTag("hltTruthBranchPFClusterHcalAssociators","hltParticleFlowClusterHCALRecoToTruthFixed"));
@@ -488,7 +508,7 @@ void TauTruthGraphValidator::fillDescriptions(edm::ConfigurationDescriptions& de
   desc.add<edm::InputTag>("pfCandidatesBarrelToken", edm::InputTag("hltParticleFlowTmpBarrel"));
   desc.add<edm::InputTag>("ticlCandidatesToken", edm::InputTag("hltTiclCandidate"));
   desc.add<edm::InputTag>("hgcalTrackstersToken", edm::InputTag("hltTiclCandidate"));
-  desc.add<edm::InputTag>("hgcalTracksterMapToken", edm::InputTag("hltTruthBranchTracksterAssociators", "hltTiclTrackstersCLUE3DHighRecoToTruthFixed"));
+  desc.add<edm::InputTag>("hgcalTracksterMapToken", edm::InputTag("hltTruthBranchTracksterAssociators", "hltTiclCandidateRecoToTruthFixed"));
   desc.add<edm::InputTag>("ecalTruthToRecoMapToken", edm::InputTag("hltTruthBranchPFClusterEcalAssociators", "hltParticleFlowClusterECALTruthToReco"));
   desc.add<edm::InputTag>("hcalTruthToRecoMapToken", edm::InputTag("hltTruthBranchPFClusterHcalAssociators", "hltParticleFlowClusterHCALTruthToReco"));
   desc.add<edm::InputTag>("hgcalTracksterTruthToRecoMapToken", edm::InputTag("hltTruthBranchTracksterAssociators", "hltTiclCandidateTruthToReco"));
