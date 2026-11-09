@@ -122,14 +122,14 @@ void TauTruthGraphValidator::bookHistograms(DQMStore::IBooker& ibook, edm::Run c
   auto bookClusterHistograms = [&](const std::string& subfolder, CaloObjectHistograms& histograms) {
     ibook.setCurrentFolder(folder_ + "/" + subfolder);
    
-    histograms.pt = ibook.book1D("caloObject_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 50, 0., 200.);
-    histograms.ptFake = ibook.book1D("caloObjectFake_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 50, 0., 200.);
+    histograms.pt = ibook.book1D("caloObject_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 50, 0., 30.);
+    histograms.ptFake = ibook.book1D("caloObjectFake_pt", "Tau signal calorimeter objects; pT [GeV]; objects", 50, 0., 30.);
     
     histograms.eta = ibook.book1D("caloObject_eta", "Tau signal calorimeter objects; eta; objects", 50, -4., 4.);
     histograms.etaFake = ibook.book1D("caloObjectFake_eta", "Tau signal calorimeter objects; eta; objects", 50, -4., 4.);
 
-    histograms.energy = ibook.book1D("caloObject_energy", "Tau signal calorimeter objects; energy [GeV]; objects", 50, 0., 500.);
-    histograms.energyFake = ibook.book1D("caloObjectFake_energy", "Tau signal calorimeter objects; energy [GeV]; objects", 50, 0., 500.);
+    histograms.energy = ibook.book1D("caloObject_energy", "Tau signal calorimeter objects; energy [GeV]; objects", 50, 0., 40.);
+    histograms.energyFake = ibook.book1D("caloObjectFake_energy", "Tau signal calorimeter objects; energy [GeV]; objects", 50, 0., 40.);
   };
 
   auto bookTruthHistograms = [&](TruthObjectHistograms& histograms) {
@@ -138,14 +138,14 @@ void TauTruthGraphValidator::bookHistograms(DQMStore::IBooker& ibook, edm::Run c
     histograms.dm = ibook.book1D("truthTau_decayMode", "Truth tau decay mode; decay mode; taus", 13, -0.5, 12.5);
     histograms.dmMatched = ibook.book1D("truthTauMatched_decayMode", "Truth tau decay mode; decay mode; taus", 13, -0.5, 12.5);
     
-    histograms.pt = ibook.book1D("truthProng_pt", "Truth prong pT; pT [GeV]; prongs", 50, 0., 200.);
-    histograms.ptMatched = ibook.book1D("truthProngMatched_pt", "Truth prong pT; pT [GeV]; prongs", 50, 0., 200.);
+    histograms.pt = ibook.book1D("truthProng_pt", "Truth prong pT; pT [GeV]; prongs", 50, 0., 40.);
+    histograms.ptMatched = ibook.book1D("truthProngMatched_pt", "Truth prong pT; pT [GeV]; prongs", 50, 0., 40.);
     
-    histograms.eta = ibook.book1D("truthProng_eta", "Truth prong eta; eta; prongs", 50, -4., 4.);
-    histograms.etaMatched = ibook.book1D("truthProngMatched_eta", "Truth prong eta; eta; prongs", 50, -4., 4.);
+    histograms.eta = ibook.book1D("truthProng_eta", "Truth prong eta; eta; prongs", 50, -5., 5.);
+    histograms.etaMatched = ibook.book1D("truthProngMatched_eta", "Truth prong eta; eta; prongs", 50, -5., 5.);
     
-    histograms.energy = ibook.book1D("truthProng_energy", "Truth prong energy; energy [GeV]; prongs", 50, 0., 500.);
-    histograms.energyMatched = ibook.book1D("truthProngMatched_energy", "Truth prong energy; energy [GeV]; prongs", 50, 0., 500.);
+    histograms.energy = ibook.book1D("truthProng_energy", "Truth prong energy; energy [GeV]; prongs", 50, 0., 150.);
+    histograms.energyMatched = ibook.book1D("truthProngMatched_energy", "Truth prong energy; energy [GeV]; prongs", 50, 0., 150.);
   };
 
   bookClusterHistograms("ECAL", ecalClusterHistograms_);
